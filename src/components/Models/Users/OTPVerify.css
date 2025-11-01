@@ -1,0 +1,143 @@
+.modal {}
+
+.modal-header {
+    border-bottom: 0;
+}
+
+.modal-body {
+    padding: 0 55px 50px;
+}
+
+.modal-content {
+    background-color: #0C0F2D;
+    border-radius: 32px;
+}
+
+
+.btn-close {
+    /* --bs-btn-close-bg: url("../../../assets/images/Close.png") */
+}
+
+.btn-close:focus {
+    box-shadow: none;
+}
+
+.modal-body .content h4 {
+    font-size: 30px;
+    font-weight: 600;
+    line-height: 42px;
+    color: rgba(255, 255, 255, 1);
+    text-transform: uppercase;
+}
+
+.modal-body .content p {
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 24px;
+    color: rgba(255, 255, 255, 1);
+}
+
+
+.modal-body form .form-label {
+    font-size: 16px;
+    font-weight: 500;
+    /* line-height: 22.4px; */
+    color: rgba(255, 255, 255, 1);
+}
+
+.modal-body form .otp-btn {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 28px;
+    /* line-height: 28px; */
+    background-color: rgba(76, 112, 255, 1);
+    color: rgba(255, 255, 255, 1);
+    border-radius: 10px;
+    padding: 14px 0;
+
+}
+
+.otp-input {
+    width: 48px;
+    height: 48px;
+    font-size: 16px;
+    font-weight: 400;
+    text-align: center;
+    border: 2px solid rgba(255, 255, 255, 1);
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 1);
+}
+
+.otp-input:focus {
+    outline: none;
+}
+
+
+.otp-input:last-child {
+    margin-right: 0 !important;
+}
+
+@media (max-width: 1399px) {
+    .modal-body .content h4 {
+        font-size: 28px;
+    }
+}
+
+@media (max-width: 1199px) {
+    .modal-body .content h4 {
+        font-size: 26px;
+    }
+}
+
+@media (max-width: 991px) {
+    .modal-body .content h4 {
+        font-size: 24px;
+    }
+}
+
+@media (max-width: 575px) {
+    .modal-body {
+        padding: 0 45px 40px;
+    }
+
+    .modal-body .content p,
+    .modal-body form .form-label {
+        font-size: 15px;
+    }
+}
+
+@media (max-width: 767px) {
+    .modal-body form .otp-btn {
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 425px) {
+    .modal-body {
+        padding: 0 35px 30px;
+    }
+
+    .otp-input {
+        width: 45px;
+        height: 45px;
+    }
+}
+
+
+@media (max-width: 425px) {
+    .otp-input {
+        width: 42px;
+        height: 42px;
+    }
+}
+
+@media (max-width: 375px) {
+    .modal-body {
+        padding: 0 25px 20px;
+    }
+
+    .otp-input {
+        width: 35px;
+        height: 35px;
+    }
+}

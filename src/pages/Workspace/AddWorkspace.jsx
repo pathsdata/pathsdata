@@ -1,0 +1,212 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+// import { authorizationHeaders, Axios } from "../../helper/Axios";
+// import { toast } from "react-toastify";
+import "./WorkspaceCreate.css";
+
+import first from "../../assets/images/workspace/1.svg";
+import second from "../../assets/images/workspace/2.svg";
+import third from "../../assets/images/workspace/3.svg";
+import fourth from "../../assets/images/workspace/4.svg";
+import left_arrow from "../../assets/images/nvigation_arrows/left_arrow.png";
+
+const AddWorkspace = () => {
+  const navigate = useNavigate();
+  const OrgFamily = JSON.parse(localStorage.getItem("openOrgFamily"));
+  const OrgId = localStorage.getItem("org_id");
+
+  const [loader, setLoader] = useState(false);
+  const [organizationData, setOrganizationData] = useState([]);
+  const [selectedOption, setSelectedOption] = useState("existing");
+
+  const [formData, setFormData] = useState({
+    org_id: "",
+    family_name: "",
+    region: "",
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleOptionSelect = (option) => {
+    setSelectedOption(option);
+  };
+
+  return (
+    <>
+      {loader && (
+        <div className="loader-overlay">
+          <div className="loader"></div>
+        </div>
+      )}
+      <div className="workspace-container">
+        {/* Header Section */}
+        <div className="workspace-header ms-4">
+          <h1 className="workspace-title">Workspace</h1>
+          <button 
+            className="back-button" 
+            onClick={() => navigate("/dashboard/workspace")}
+          >
+            <img src={left_arrow} alt="Back" />
+            <span>Back</span>
+          </button>
+        </div>
+
+        {/* Main Content */}
+        <div className="workspace-content workspace-section">
+          {/* Create Workspace Section */}
+          <section className="">
+            <h2 className="section-title">Create Workspace</h2>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="family_name" className="form-label">
+                  Workspace Name
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter Workspace Name"
+                  id="family_name"
+                  name="family_name"
+                  value={formData.family_name}
+                  onChange={handleChange}
+                  autoFocus
+                  required
+                  className="form-input"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="region" className="form-label">
+                  Region
+                </label>
+                <select
+                  name="region"
+                  id="region"
+                  value={formData.region}
+                  onChange={handleChange}
+                  className="form-input"
+                >
+                  <option value="">Select Region</option>
+                  <option value="us-east-1">US East (N. Virginia)</option>
+                  <option value="us-east-2">US East (Ohio)</option>
+                  <option value="us-west-1">US West (N. California)</option>
+                  <option value="us-west-2">US West (Oregon)</option>
+                  <option value="ca-central-1">Canada (Central)</option>
+                  <option value="ca-west-1">Canada West (Calgary)</option>
+                  <option value="mx-central-1">Mexico (Central)</option>
+                  <option value="eu-west-1">EU (Ireland)</option>
+                  <option value="ap-southeast-1">
+                    Asia Pacific (Singapore)
+                  </option>
+                </select>
+              </div>
+            </div>
+          </section>
+
+          {/* Combined Options Section */}
+          <section className="">
+            <h2 className="section-title">Storage And Compute</h2>
+
+            <div className="all-options-grid">
+            
+
+              <label
+                className={`option-card ${
+                  selectedOption === "quick-start" ? "selected" : ""
+                }`}
+              >
+                <div className="option-content-wrapper">
+                  <div className="option-icon">
+                    <img src={third} alt="Quick Start" />
+                  </div>
+                  <div className="option-text-content">
+                    <div className="option-header">
+                      <h3 className="option-title">
+                        Automatically With Quick Start
+                      </h3>
+                      <input
+                        type="radio"
+                        name="workspace-option"
+                        value="quick-start"
+                        checked={selectedOption === "quick-start"}
+                        onChange={() => handleOptionSelect("quick-start")}
+                        className="option-radio"
+                      />
+                    </div>
+                    <p className="option-description">
+                      Auto Deploy In AWS. Resources Will Be Created In
+                      Databricks - Managed VPC.
+                    </p>
+                  </div>
+                </div>
+              </label>
+
+              <label
+                className={`option-card ${
+                  selectedOption === "pathsdata" ? "selected" : ""
+                }`}
+              >
+                <div className="option-content-wrapper">
+                  <div className="option-icon">
+                    <img src={fourth} alt="PATHSDATA" />
+                  </div>
+                  <div className="option-text-content">
+                    <div className="option-header">
+                      <h3 className="option-title">Manually In PATHSDATA</h3>
+                      <input
+                        type="radio"
+                        name="workspace-option"
+                        value="pathsdata"
+                        checked={selectedOption === "pathsdata"}
+                        onChange={() => handleOptionSelect("pathsdata")}
+                        className="option-radio"
+                      />
+                    </div>
+                    <p className="option-description">
+                      Setup Advanced Configs Such As Customer - Manage VPC And
+                      Customer Managed Keys.
+                    </p>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </section>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="workspace-actions">
+          <button
+            type="button"
+            className="btn-cancel"
+            onClick={() => navigate("/dashboard/workspace")}
+            disabled={loader}
+          >
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            className={`btn-create ${loader ? "loading" : ""}`}
+            disabled={loader}
+          >
+            {loader ? (
+              <span className="spinner" role="status" aria-hidden="true"></span>
+            ) : (
+              "Create"
+            )}
+          </button>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default AddWorkspace;

@@ -1,0 +1,708 @@
+/* Pixel-perfect design matching the provided image */
+.workspace-container {
+  background-color: #010317;
+  min-height: 100vh;
+  padding: 30px 20px;
+  font-family: "Poppins", sans-serif;
+  margin: 0 auto;
+  /* max-width: 1400px; */
+}
+
+.workspace-header {
+  margin-bottom: 20px;
+  padding: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.workspace-title {
+  font-size: 24px;
+  font-weight: 500;
+  margin: 0;
+  font-family: "Poppins", sans-serif;
+     background: linear-gradient(90deg, #526EF2 0%, #B5C7FF 100%);
+    -webkit-background-clip: text;
+    color: transparent;
+}
+.back-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 96px;
+  height: 40px;
+  padding: 8px 16px 8px 6px;
+  background-color: #05082c;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  opacity: 1;
+}
+
+.back-button img {
+  width: 18px;
+  height: 12px;
+  object-fit: contain;
+  border-width: 2px;
+}
+
+.back-button:hover {
+  opacity: 0.9;
+}
+
+.workspace-content {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.workspace-section {
+  background-color: #030625;
+  border: 1px solid #526ef2;
+  border-radius: 12px;
+  padding: 25px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Add SVG background pattern */
+.workspace-section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 150px;
+  height: 150px;
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%234361ee' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+  opacity: 0.3;
+  z-index: 0;
+}
+
+.section-title {
+  font-size: 20px;
+  font-weight: 500;
+  color: #ffffff;
+  margin: 0 0 20px 0;
+  font-family: "Poppins", sans-serif;
+  position: relative;
+  z-index: 1;
+}
+
+/* Form layout - 2 fields side by side */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-label {
+  font-size: 16px;
+  font-weight: 400;
+  color: #ffffff;
+  margin-bottom: 8px;
+  font-family: "Poppins", sans-serif;
+}
+
+.form-input {
+  padding: 12px 15px;
+  background-color: #010317;
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 400;
+  font-family: "Poppins", sans-serif;
+  outline: none;
+  transition: background-color 0.3s ease;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  max-height: 45px;
+}
+
+.form-input:focus {
+  background-color: #0c0f2d;
+}
+
+.form-input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+select.form-input {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'><path fill='%23ffffff' d='M2 0L0 2h4zm0 5L0 3h4z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 10px;
+  padding-right: 35px;
+}
+
+/* Single grid for all 4 options */
+.all-options-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Radio button card styling */
+.option-card {
+  background-color: #010317;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  z-index: 1;
+  min-height: 140px;
+}
+
+.option-card:hover {
+  border-color: #4361ee;
+  background-color: #0c0f2d;
+}
+
+.option-card.selected {
+  border-color: #4361ee;
+  background-color: #0c0f2d;
+  box-shadow: 0 0 15px rgba(67, 97, 238, 0.2);
+}
+
+/* New layout for image and content side by side */
+.option-content-wrapper {
+  display: flex;
+  gap: 15px;
+  height: 100%;
+}
+
+.option-icon {
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(67, 97, 238, 0.1);
+  padding: 6px;
+  flex-shrink: 0;
+}
+
+.option-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.option-text-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header with title and radio button */
+.option-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+/* Custom radio button styling */
+.option-radio {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #4361ee;
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.option-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+  font-family: "Poppins", sans-serif;
+  line-height: 1.3;
+  flex: 1;
+  padding-right: 8px;
+}
+
+.option-description {
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+  line-height: 1.4;
+  font-family: "Poppins", sans-serif;
+  flex-grow: 1;
+}
+
+/* Action Buttons */
+.workspace-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  padding: 15px 0 0 0;
+  margin-top: 5px;
+  position: relative;
+  z-index: 1;
+}
+
+.btn-cancel,
+.btn-create {
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 12px 35px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 140px;
+  height: 42px;
+}
+
+.btn-cancel {
+  background-color: transparent;
+  color: #ffffff;
+  border: 1px solid #738bff;
+}
+
+.btn-cancel:hover:not(:disabled) {
+  background-color: rgba(115, 139, 255, 0.1);
+}
+
+.btn-cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-create {
+  background: linear-gradient(90deg, #4361ee 0%, #9ca9ee 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-create:hover:not(:disabled) {
+  background: linear-gradient(90deg, #738bff 0%, #4361ee 100%);
+  transform: translateY(-1px);
+}
+
+.btn-create:disabled {
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
+.btn-create.loading {
+  opacity: 0.8;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Loader Overlay */
+.loader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.loader {
+  width: 35px;
+  height: 35px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #4361ee;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* ========== RESPONSIVE DESIGN ========== */
+
+/* Extra Large Screens (1440px and up) - MacBook Pro 14/16" */
+@media (min-width: 1440px) {
+  .workspace-container {
+    padding: 35px 40px;
+    /* max-width: 1400px; */
+  }
+
+  .workspace-title {
+    font-size: 24px;
+  }
+
+  .workspace-section {
+    padding: 30px;
+  }
+
+  .section-title {
+    font-size: 22px;
+    margin-bottom: 25px;
+  }
+
+  .form-row {
+    gap: 25px;
+  }
+
+  .form-label {
+    font-size: 17px;
+  }
+
+  .form-input {
+    padding: 14px 16px;
+    max-height: 48px;
+  }
+
+  .all-options-grid {
+    gap: 20px;
+  }
+
+  .option-card {
+    padding: 20px;
+    min-height: 150px;
+  }
+
+  .option-content-wrapper {
+    gap: 18px;
+  }
+
+  .option-icon {
+    width: 50px;
+    height: 50px;
+  }
+
+  .option-title {
+    font-size: 17px;
+  }
+
+  .option-description {
+    font-size: 14px;
+  }
+}
+
+/* Large Desktop Screens (1280px to 1439px) - MacBook Air/13" */
+@media (min-width: 1280px) and (max-width: 1439px) {
+  .workspace-container {
+    padding: 30px 35px;
+  }
+
+  .workspace-title {
+    font-size: 20px;
+  }
+
+  .workspace-section {
+    padding: 28px;
+  }
+
+  .section-title {
+    font-size: 21px;
+  }
+
+  .form-row {
+    gap: 22px;
+  }
+
+  .form-label {
+    font-size: 16px;
+  }
+
+  .form-input {
+    padding: 13px 15px;
+  }
+
+  .all-options-grid {
+    gap: 18px;
+  }
+
+  .option-card {
+    padding: 22px;
+  }
+
+  .option-content-wrapper {
+    gap: 16px;
+  }
+
+  .option-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .option-title {
+    font-size: 16px;
+  }
+}
+
+/* Standard Desktop (1024px to 1279px) */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .workspace-container {
+    padding: 25px 30px;
+  }
+
+  .workspace-title {
+    font-size: 20px;
+  }
+
+  .workspace-section {
+    padding: 25px;
+  }
+
+  .section-title {
+    font-size: 20px;
+  }
+
+  .form-row {
+    gap: 20px;
+  }
+
+  .form-label {
+    font-size: 15px;
+  }
+
+  .form-input {
+    padding: 12px 14px;
+  }
+
+  .all-options-grid {
+    gap: 15px;
+  }
+
+  .option-card {
+    padding: 20px;
+  }
+
+  .option-content-wrapper {
+    gap: 15px;
+  }
+
+  .option-icon {
+    width: 45px;
+    height: 45px;
+  }
+
+  .option-title {
+    font-size: 15px;
+  }
+
+  .option-description {
+    font-size: 13px;
+  }
+}
+
+/* Tablets and smaller laptops (768px to 1023px) */
+@media (max-width: 1023px) {
+  .workspace-container {
+    padding: 20px 15px;
+  }
+
+  .workspace-title {
+    font-size: 20px;
+  }
+
+  .workspace-section {
+    padding: 20px;
+  }
+
+  .section-title {
+    font-size: 19px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .all-options-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .option-content-wrapper {
+    gap: 15px;
+  }
+
+  .option-icon {
+    width: 42px;
+    height: 42px;
+  }
+
+  .option-title {
+    font-size: 15px;
+  }
+
+  .option-description {
+    font-size: 13px;
+  }
+}
+
+/* Mobile devices (768px and below) */
+@media (max-width: 768px) {
+  .workspace-container {
+    padding: 15px 12px;
+  }
+
+  .workspace-title {
+    font-size: 18px;
+  }
+
+  .workspace-section {
+    padding: 18px;
+  }
+
+  .section-title {
+    font-size: 18px;
+  }
+
+  .form-label {
+    font-size: 15px;
+  }
+
+  .workspace-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .btn-cancel,
+  .btn-create {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .option-card {
+    padding: 18px;
+    min-height: 130px;
+  }
+
+  .option-content-wrapper {
+    gap: 12px;
+  }
+
+  .option-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .option-title {
+    font-size: 14px;
+  }
+
+  .option-description {
+    font-size: 12px;
+  }
+}
+
+/* Small mobile devices (480px and below) */
+@media (max-width: 480px) {
+  .workspace-container {
+    padding: 12px 10px;
+  }
+
+  .workspace-title {
+    font-size: 16px;
+  }
+
+  .section-title {
+    font-size: 17px;
+  }
+
+  .workspace-section {
+    padding: 15px;
+  }
+
+  .form-label {
+    font-size: 14px;
+  }
+
+  .option-card {
+    padding: 15px;
+  }
+
+  .option-content-wrapper {
+    gap: 10px;
+  }
+
+  .option-icon {
+    width: 35px;
+    height: 35px;
+  }
+
+  .option-title {
+    font-size: 13px;
+  }
+
+  .option-description {
+    font-size: 11px;
+  }
+
+  .btn-cancel,
+  .btn-create {
+    font-size: 13px;
+    padding: 10px 25px;
+    height: 38px;
+  }
+}
+
+/* Extra small devices (360px and below) */
+@media (max-width: 360px) {
+  .workspace-container {
+    padding: 10px 8px;
+  }
+
+  .workspace-section {
+    padding: 12px;
+  }
+
+  .option-content-wrapper {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .option-icon {
+    width: 32px;
+    height: 32px;
+    align-self: flex-start;
+  }
+
+  .option-header {
+    margin-bottom: 8px;
+  }
+}

@@ -1,0 +1,244 @@
+/* ---- Header ---- */
+.admin-header {
+    box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+    padding: 28px 25px 28px 25px !important;
+}
+
+.welcome-section {
+    margin-top: 16px;
+}
+
+.second-view-title {
+    font-size: 24px;
+    font-weight: 500;
+    color: #FFFFFF;
+    display: block;
+    font-family: var(--popping);
+}
+
+.second-view-desc {
+    font-size: 16px;
+    color: #AEB9E1;
+    margin: 0;
+    font-family: var(--popping);
+    line-height: 1.5;
+}
+
+
+.admin-header h5 {
+    font-weight: 700;
+    font-size: 28px;
+    /* color: rgba(181, 199, 255, 1); */
+    background: linear-gradient(to right, #526EF2, #B5C7FF);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+
+    font-family: var(--popping);
+
+}
+
+.admin-header .profile {
+    font-weight: 500;
+    font-size: 16px;
+    color: rgba(255, 255, 255, 1);
+    font-family: var(--popping);
+}
+
+.admin-header .profile .logo {
+    margin-right: 10px;
+    width: 43px;
+    height: 43px;
+}
+
+.admin-header .profile .profile-arrow {
+    margin-left: 20px;
+}
+
+
+.admin-header .dropdown-menu {
+    background: #0C0F2D;
+}
+
+.admin-header .dropdown-menu li .dropdown-item {
+    font-family: var(--popping);
+    font-weight: 400;
+    font-size: 14px;
+    color: rgba(221, 226, 255, 1);
+}
+
+.admin-header .dropdown-menu:hover {
+    color: rgba(221, 226, 255, 1);
+    background: #0C0F2D;
+
+}
+
+.admin-header .navbar-nav .nav-link.show {
+    color: rgba(221, 226, 255, 1) !important;
+}
+
+
+
+
+
+
+.admin-header .notification {
+    /* border: 1px solid rgba(20    4, 204, 216, 1); */
+    border-radius: 50%;
+    padding: 14px !important;
+    background-color: rgba(12, 15, 45, 1);
+}
+
+
+.admin-header form {
+    display: inline-block;
+    margin: auto;
+}
+
+
+.pseudo-search input {
+    border: 0;
+    background-color: transparent;
+    width: 200px;
+    font-family: var(--popping);
+
+}
+
+.pseudo-search input:focus {
+    outline: none;
+}
+
+.pseudo-search button,
+.pseudo-search i {
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.fa-magnifying-glass:before,
+.fa-search:before {
+    content: url("../../assets/images/images/search.png");
+    /* background-image: url("../assets/images/images/search.png") !important; */
+    margin-right: 15px;
+}
+
+.pseudo-search {
+    display: flex;
+    align-items: center;
+    color: rgba(255, 255, 255, 1);
+    /* border: 1px solid rgba(204, 204, 216, 1); */
+    border-radius: 12px;
+    padding: 14px 15px;
+    background: rgba(12, 15, 45, 1);
+
+}
+
+.pseudo-search select {
+    border: none;
+}
+
+.pseudo-search input {
+    font-weight: 400;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 1);
+}
+
+.pseudo-search input::placeholder {
+    color: rgba(255, 255, 255, 1);
+}
+
+@media (max-width: 1399px) {
+    .admin-header {
+        padding: 25px 35px !important;
+    }
+
+    .admin-header .profile {
+        font-size: 17px;
+    }
+
+    .admin-header .profile .profile-arrow {
+        margin-left: 18px;
+    }
+}
+
+@media (max-width: 1299px) {
+    .admin-header {
+        padding: 25px 30px !important;
+    }
+
+    .admin-header h5 {
+        font-size: 28px;
+    }
+}
+
+@media (max-width: 1199px) {
+    .admin-header h5 {
+        font-size: 26px;
+    }
+
+    .admin-header .profile {
+        font-size: 16px;
+    }
+
+    .admin-header .profile .logo {
+        margin-right: 10px;
+        width: 40px;
+        height: 40px;
+    }
+
+    .admin-header .profile .profile-arrow {
+        margin-left: 15px;
+    }
+
+    .admin-header .notification {
+        padding: 12px !important;
+    }
+}
+
+@media (max-width: 991px) {
+    .admin-header {
+        padding: 22px 30px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-header {
+        padding: 18px 30px !important;
+    }
+
+    .admin-header h5 {
+        font-size: 25px;
+    }
+}
+
+@media (max-width: 575px) {
+    .admin-header {
+        padding: 15px 25px !important;
+    }
+
+    .admin-header h5 {
+        font-size: 24px;
+    }
+}
+
+@media (max-width: 425px) {
+    .admin-header {
+        padding: 12px 20px !important;
+    }
+
+    .admin-header h5 {
+        font-size: 22px;
+    }
+}
+
+@media (max-width: 375px) {
+    .admin-header {
+        padding: 12px 18px !important;
+    }
+
+    .admin-header h5 {
+        font-size: 20px;
+    }
+}
+
+/* ---- Header ---- */
