@@ -1,27 +1,6 @@
-import React, { useState } from "react";
 import { Modal } from "react-bootstrap";
-import { toast } from "react-toastify";
-import close from "../../../assets/images/close_white.png";
 
 const Logout = ({ show, handleClose, handleLogout, isLogoutLoading }) => {
-  const [subnet, setSubnet] = useState("");
-
-  const handleChange = (e) => {
-    setSubnet(e.target.value);
-  };
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!subnet.trim()) {
-      toast.error("Subnet cannot be empty");
-      return;
-    }
-    const existingSubnets = JSON.parse(localStorage.getItem("subnets")) || [];
-    const updatedSubnets = [...existingSubnets, subnet];
-    localStorage.setItem("subnets", JSON.stringify(updatedSubnets));
-    toast.success("Subnet added successfully");
-    setSubnet("");
-    handleClose();
-  };
 
   return ( 
     <Modal show={show} onHide={handleClose} centered>
@@ -32,15 +11,11 @@ const Logout = ({ show, handleClose, handleLogout, isLogoutLoading }) => {
           </div>
 
           <div className="mt-2">
-            <form onSubmit={handleSubmit}>
-              <div className="">
-                <div className="d-flex justify-content-center">
-                  <p style={{ fontSize: "17px", color: "#fff" }}>
-                    {`Are you sure you want to Logout?`}
-                  </p>
-                </div>
-              </div>
-            </form>
+            <div className="d-flex justify-content-center">
+              <p style={{ fontSize: "17px", color: "#fff" }}>
+                {`Are you sure you want to Logout?`}
+              </p>
+            </div>
           </div>
         </div>
         <div className="delete-modal-footer">

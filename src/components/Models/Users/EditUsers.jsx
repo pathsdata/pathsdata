@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Modal } from 'react-bootstrap';
 import { toast } from 'react-toastify';
-import { authorizationHeaders, Axios } from '../../../helper/Axios';
+import { getRoles, updateOrganizationUsers, updateWorkspaceUsers } from '../../../services/api';
 import { useNavigate } from 'react-router-dom';
 
 const initialState = {
@@ -14,7 +14,8 @@ const EditUsers = ({ show, handleClose, GetUserList, user }) => {
 
     const navigate = useNavigate();
 
-    const familyId = localStorage.getItem("family_id");
+    // Support both workspace_id (new) and family_id (legacy) for backward compatibility
+    const workspaceId = localStorage.getItem("workspace_id") || localStorage.getItem("family_id");
     const UserOrgId = localStorage.getItem("user_org_id");
 
     const [roleList, setRoleList] = useState([]);
@@ -46,80 +47,52 @@ const EditUsers = ({ show, handleClose, GetUserList, user }) => {
         setLoading(true);
 
         try {
-            const url = UserOrgId
-                ? `/organization/users`
-                : `/family/users`;
-
             const payload = {
                 ...formData,
-                ...(UserOrgId ? { org_id: UserOrgId } : { family_id: familyId }),
-            }
+                ...(UserOrgId ? { org_id: UserOrgId } : { workspace_id: workspaceId }),
+            };
 
-            const res = await Axios.patch(url, payload, authorizationHeaders());
+            const res = UserOrgId
+                ? await updateOrganizationUsers(payload)
+                : await updateWorkspaceUsers(payload);
 
-            if (res?.data?.statusCode === 200) {
-                toast.success(res?.data?.message);
+            if (res?.data?.statusCode === 200 || res?.data) {
+                toast.success(res?.data?.message || "User updated successfully");
                 setFormData(initialState);
                 handleClose();
                 GetUserList();
-            } else {
-                toast.error(res?.data?.message);
             }
         } catch (err) {
-            console.error("Error Edit-User++", err);
-
-            if (err?.message === "Network Error") {
-                toast.error(err?.message);
-            }
-            if (err?.response?.data?.statusCode === 400) {
-                toast.error(err?.response?.data?.message);
-            }
-            if (err?.response?.data?.statusCode === "440") {
-                toast.error("Session expired. Please log in again.");
-                localStorage.clear();
-                localStorage.setItem("openCloudOption", false);
-                navigate("/sign-in");
-            } else {
-                toast.error(err?.response?.data?.message || "An error occurred");
-            }
+            console.error("Error updating user:", err);
+            // Error handling is done by Axios interceptor
         } finally {
             setLoading(false);
         }
     };
 
 
-    const GetRoleList = async () => {
+    const GetRoleList = useCallback(async () => {
         try {
-            const url = UserOrgId
-                ? `/roles?org_id=${UserOrgId}`
-                : `/roles?family_id=${familyId}`;
+            const params = UserOrgId
+                ? { org_id: UserOrgId }
+                : { workspace_id: workspaceId };
 
-            const res = await Axios.get(url, authorizationHeaders());
+            const res = await getRoles(params);
 
-            if (res?.data?.statusCode === 200) {
-                setRoleList(res?.data?.data);
+            if (res?.data?.statusCode === 200 || res?.data) {
+                setRoleList(res?.data?.data || res?.data);
             }
-            else {
-                toast.error(res.data?.message);
-            }
-
         } catch (err) {
-            console.error("Error Role++", err);
-
-            if (err?.response?.data?.statusCode === "440") {
-                toast.error("Session expired. Please log in again.");
-                localStorage.clear();
-                localStorage.setItem("openCloudOption", false);
-                navigate("/sign-in");
-            } else {
-                toast.error(err?.response?.data?.message || "An error occurred");
-            }
+            console.error("Error fetching roles:", err);
+            // Error handling is done by Axios interceptor
         }
-    }
+    }, [UserOrgId, workspaceId]);
 
     useEffect(() => {
-        GetRoleList();
-    }, [])
+        if (show) {
+            GetRoleList();
+        }
+    }, [show, GetRoleList])
 
     useEffect(() => {
         setFormData({

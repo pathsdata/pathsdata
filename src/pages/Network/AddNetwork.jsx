@@ -3,7 +3,7 @@ import deletebtn from "../../assets/images/delete-btn.png";
 import editbtn from "../../assets/images/edit-btn.png";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-// import { Axios, authorizationHeaders } from "../../helper/Axios";
+import { createNetwork } from "../../services/api";
 // import Subnet from "../../Components/Modal/Subnet/Subnet";
 // import SecurityGroup from "../../Components/Modal/SecurityGroup/SecurityGroup";
 // import EditSubnet from "../../Components/Modal/Subnet/EditSubnet";
@@ -12,17 +12,10 @@ import left_arrow from "../../assets/images/nvigation_arrows/left_arrow.png";
 
 const AddNetwork = () => {
   const navigate = useNavigate();
-  const tenantId = localStorage.getItem("signin-tenantid");
-  const familyId = localStorage.getItem("family_id");
+  // Support both workspace_id (new) and family_id (legacy) for backward compatibility
+  const workspaceId = localStorage.getItem("workspace_id") || localStorage.getItem("family_id");
 
   const [loading, setLoading] = useState(false);
-  const [subnetShow, setSubnetShow] = useState(false);
-  const [editSubnetShow, setEditSubnetShow] = useState(false);
-  const [editSubnetData, setEubnetData] = useState({});
-  const [securityShow, setSecurityShow] = useState(false);
-  const [editSecurityShow, setEditSecurityShow] = useState(false);
-  const [editSecurityData, setEditSecurityData] = useState({});
-
   const [subnetList, setSubnetList] = useState([]);
   const [securityList, setSecurityList] = useState([]);
 
@@ -35,12 +28,6 @@ const AddNetwork = () => {
     endpoint: "",
   });
 
-  const handleClose = () => {
-    setSubnetShow(false);
-    setEditSubnetShow(false);
-    setSecurityShow(false);
-    setEditSecurityShow(false);
-  };
 
   // ✅ Static dummy data instead of API
   useEffect(() => {
@@ -65,18 +52,6 @@ const AddNetwork = () => {
       ...formData,
       [e.target.name]: e.target.value,
     });
-  };
-
-  const handleEditSubnet = (item) => {
-    console.log("Edit Subnet:", item);
-    setEubnetData(item);
-    setEditSubnetShow(true);
-  };
-
-  const handleEditSecurity = (item) => {
-    console.log("Edit Security Group:", item);
-    setEditSecurityData(item);
-    setEditSecurityShow(true);
   };
 
   const handleDelete = (index) => {
@@ -115,27 +90,20 @@ const AddNetwork = () => {
       return;
     }
 
-    // 🔒 Commented out API — using static simulation
-    /*
     try {
-      const payload = { family_id: familyId, ...formData };
-      const res = await Axios.post(`/network`, payload, authorizationHeaders());
-      if (res?.data?.statusCode === 200) {
-        toast.success(res?.data?.message);
-        navigate("/vpc");
-      } else {
-        toast.error(res?.data?.message);
+      const payload = { workspace_id: workspaceId, ...formData };
+      const res = await createNetwork(payload);
+
+      if (res?.data?.statusCode === 200 || res?.data) {
+        toast.success(res?.data?.message || "Network created successfully!");
+        navigate("/dashboard/network");
       }
     } catch (err) {
-      toast.error(err?.response?.data?.message || "An error occurred");
+      console.error("Error creating network:", err);
+      // Error handling is done by Axios interceptor
     } finally {
       setLoading(false);
     }
-    */
-
-    console.log("Static submit payload:", formData);
-    toast.success("Static VPC created successfully!");
-    setLoading(false);
   };
 
   return (

@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { createOrganization } from "../../../services/api";
 import "../SignIn.css";
 
 export default function CreateOrganization() {
@@ -19,9 +21,39 @@ export default function CreateOrganization() {
     }));
   };
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    navigate('/dashboard/home');
+
+    if (!org.name.trim()) {
+      toast.error("Please enter organization name");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await createOrganization({
+        name: org.name,
+        description: org.description || undefined,
+      });
+
+      if (response.data) {
+        // API returns organizationId (camelCase) per OpenAPI schema
+        const organizationId = response.data.organizationId || response.data.organization_id || response.data.id;
+
+        if (organizationId) {
+          localStorage.setItem("user_org_id", organizationId);
+        }
+
+        toast.success(response.data.message || "Organization created successfully!");
+        navigate('/dashboard/home');
+      }
+    } catch (error) {
+      console.error("Error creating organization:", error);
+      // Error handling is done by Axios interceptor
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

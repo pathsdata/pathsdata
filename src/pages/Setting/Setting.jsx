@@ -2,6 +2,7 @@ import editbtn from "../../assets/images/edit-btn.png";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useEffect, useState } from "react";
+import { getProfile, getSubscription, deleteSubscription } from "../../services/api";
 
 const Setting = () => {
   const navigate = useNavigate();
@@ -11,42 +12,27 @@ const Setting = () => {
 
   const GetProfileData = async () => {
     try {
-      const res = await Axios.get(`/profile`, authorizationHeaders());
-      // console.log("profile++", res);
+      const res = await getProfile();
 
-      if (res?.data?.statusCode === 200) {
-        setProfileData(res?.data?.data);
-      } else {
-        toast.error(res.data?.message);
+      if (res?.data?.statusCode === 200 || res?.data) {
+        setProfileData(res?.data?.data || res?.data);
       }
     } catch (err) {
-      console.error("Error Profile++", err);
-
-      if (err?.message === "Network Error") {
-        toast.error(err?.message);
-      }
-      if (err?.response?.data?.statusCode === "440") {
-        toast.error("Session expired. Please log in again.");
-        localStorage.clear();
-        navigate("/sign-in");
-      } else {
-        toast.error(err?.response?.data?.message || "An error occurred");
-      }
+      console.error("Error fetching profile:", err);
+      // Error handling is done by Axios interceptor
     }
   };
 
   const GetSubscriptionData = async () => {
     try {
-      const res = await Axios.get(`/subscription`, authorizationHeaders());
-      console.log("networkres", res);
+      const res = await getSubscription();
 
-      if (res.data?.statusCode === 200) {
-        setSubscriptionData(res.data.data);
-      } else {
-        toast.error(res.data?.message);
+      if (res?.data?.statusCode === 200 || res?.data) {
+        setSubscriptionData(res?.data?.data || res?.data);
       }
     } catch (err) {
-      console.error("Error subscription++", err);
+      console.error("Error fetching subscription:", err);
+      // Error handling is done by Axios interceptor
 
       if (err?.message === "Network Error") {
         // toast.error(err?.message);
@@ -70,25 +56,14 @@ const Setting = () => {
 
   const handleCancel = async () => {
     try {
-      const res = await Axios.delete(`/subscription`, authorizationHeaders());
-      if (res?.data?.statusCode === 200) {
-        toast.success(res.data?.message);
+      const res = await deleteSubscription();
+      if (res?.data?.statusCode === 200 || res?.data) {
+        toast.success(res.data?.message || "Subscription cancelled successfully");
         GetSubscriptionData();
-      } else {
-        if (err?.message === "Network Error") {
-          toast.error(err?.message);
-        }
-        if (err?.response?.data?.statusCode === "440") {
-          toast.error("Session expired. Please log in again.");
-          localStorage.clear();
-          localStorage.setItem("openCloudOption", false);
-          navigate("/sign-in");
-        } else {
-          toast.error(err?.response?.data?.message || "An error occurred");
-        }
       }
     } catch (err) {
-      console.error("Error Delete resourcesIAM++", err);
+      console.error("Error deleting subscription:", err);
+      // Error handling is done by Axios interceptor
     }
   };
 

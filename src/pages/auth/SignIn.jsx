@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import AuthLeft from "./AuthLeft"; // import shared left section
+import { requestSignInOTP } from "../../services/api";
 import "./SignIn.css";
 
 const initialState = { email_id: "" };
@@ -15,10 +17,24 @@ const SignIn = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSignIn = (e) => {
+  const handleSignIn = async (e) => {
     e.preventDefault();
-    localStorage.setItem("email", formData.email_id);
-    navigate("/verify-otp");
+    setLoading(true);
+
+    try {
+      const response = await requestSignInOTP({ email: formData.email_id });
+
+      if (response.data) {
+        localStorage.setItem("email", formData.email_id);
+        toast.success(response.data.message || "OTP sent successfully!");
+        navigate("/verify-otp");
+      }
+    } catch (error) {
+      console.error("Sign-in error:", error);
+      // Error handling is done by Axios interceptor
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

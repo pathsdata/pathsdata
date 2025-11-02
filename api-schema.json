@@ -1,0 +1,2073 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "PathsData API",
+    "description": "Main API service for PathsData - Copilot for Data Engineers with AWS Marketplace integration",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/auth/signin": {
+      "post": {
+        "tags": [
+          "authentication"
+        ],
+        "summary": "Request Signin Otp",
+        "description": "Request OTP for sign-in.\n\nSends a one-time password to the user's email address.\nFor security, the response doesn't reveal if the email exists.\n\n**Process:**\n1. Validates the email exists and account is active\n2. Generates a 6-digit TOTP code\n3. Encrypts the TOTP secret with AWS KMS\n4. Hashes the code with bcrypt\n5. Saves to database with 5-minute expiry\n6. Sends email via AWS SES\n\n**Security:**\n- Rate limited per email\n- Max 3 verification attempts per OTP\n- Automatic expiry after 5 minutes\n- Doesn't reveal if email exists",
+        "operationId": "request_signin_otp_api_v1_auth_signin_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestOTPRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestOTPResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/verify-otp": {
+      "post": {
+        "tags": [
+          "authentication"
+        ],
+        "summary": "Verify Signin Otp",
+        "description": "Verify OTP and get JWT access token.\n\nValidates the OTP code and returns a JWT token for authenticated requests.\n\n**Process:**\n1. Verifies OTP code (checks expiry, attempts, validity)\n2. Marks OTP as verified\n3. Updates user's last login timestamp\n4. Generates JWT access token (24-hour expiry)\n5. Returns token and user ID\n\n**JWT Token:**\n- Algorithm: HS256\n- Expiry: 24 hours\n- Claims: user_id (sub), email, exp, iat\n\n**Security:**\n- Max 3 verification attempts\n- Bcrypt verification\n- Account status check",
+        "operationId": "verify_signin_otp_api_v1_auth_verify_otp_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyOTPRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyOTPResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/resend-otp": {
+      "post": {
+        "tags": [
+          "authentication"
+        ],
+        "summary": "Resend Otp",
+        "description": "Resend OTP to email.\n\nGenerates and sends a new OTP code to the user's email.\nPrevious OTP codes are invalidated.\n\n**Note:** Same process as /signin but explicitly for resending.",
+        "operationId": "resend_otp_api_v1_auth_resend_otp_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResendOTPRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResendOTPResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/organizations": {
+      "get": {
+        "tags": [
+          "organizations"
+        ],
+        "summary": "List Organizations",
+        "description": "List organizations where user is a member.\n\nReturns all organizations the authenticated user belongs to,\nincluding those they own and those they're a member of.\n\n**Authorization:** Requires authentication (JWT token)",
+        "operationId": "list_organizations_api_v1_organizations_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationListResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "organizations"
+        ],
+        "summary": "Create Organization",
+        "description": "Create a new organization.\n\nCreates an organization and automatically adds the creator as the owner with\nthe `org_owner` role.\n\n**Process:**\n1. Validates organization name is unique\n2. Creates organization entity\n3. Gets predefined `org_owner` role\n4. Adds creator as owner member\n\n**Authorization:** Requires authentication (JWT token)",
+        "operationId": "create_organization_api_v1_organizations_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrganizationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateOrganizationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/organizations/{organization_id}": {
+      "get": {
+        "tags": [
+          "organizations"
+        ],
+        "summary": "Get Organization",
+        "description": "Get organization details.\n\nReturns detailed information about a specific organization.\n\n**Authorization:** Requires authentication and organization membership",
+        "operationId": "get_organization_api_v1_organizations__organization_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "organization_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Organization Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "organizations"
+        ],
+        "summary": "Update Organization",
+        "description": "Update organization details.\n\nUpdates organization name, description, or settings.\n\n**Process:**\n1. Validates user has `org:update` permission\n2. Updates organization fields\n3. Saves changes to database\n\n**Authorization:** Requires `org:update` permission (typically org_owner or org_admin)",
+        "operationId": "update_organization_api_v1_organizations__organization_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "organization_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Organization Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOrganizationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateOrganizationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "organizations"
+        ],
+        "summary": "Delete Organization",
+        "description": "Deactivate organization.\n\nSoft-deletes the organization by marking it as inactive.\nOnly the organization owner can perform this action.\n\n**Authorization:** Must be organization owner",
+        "operationId": "delete_organization_api_v1_organizations__organization_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "organization_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Organization Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/organizations/{organization_id}/members": {
+      "post": {
+        "tags": [
+          "organizations"
+        ],
+        "summary": "Add Organization Member",
+        "description": "Add member to organization.\n\nAdds a user as a member of the organization with the specified role.\n\n**Authorization:** Requires `org:invite` permission (typically org_owner or org_admin)\n**Note:** This is a direct add. For email invitations, use the /invitations endpoint.",
+        "operationId": "add_organization_member_api_v1_organizations__organization_id__members_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "organization_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Organization Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddOrganizationMemberRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddOrganizationMemberResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/organizations/{organization_id}/members/{member_user_id}": {
+      "delete": {
+        "tags": [
+          "organizations"
+        ],
+        "summary": "Remove Organization Member",
+        "description": "Remove member from organization.\n\nRemoves a user from the organization.\nCannot remove the owner.\n\n**Authorization:** Requires `org:remove_member` permission or must be the owner",
+        "operationId": "remove_organization_member_api_v1_organizations__organization_id__members__member_user_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "organization_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Organization Id"
+            }
+          },
+          {
+            "name": "member_user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Member User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoveOrganizationMemberResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/invitations": {
+      "post": {
+        "tags": [
+          "invitations"
+        ],
+        "summary": "Send Invitation",
+        "description": "Send an invitation to join an organization or workspace.\n\nCreates an invitation with a secure token and sends an email to the recipient.\n\n**Process:**\n1. Validates user has permission to invite (e.g., `org:invite`)\n2. Checks for duplicate pending invitations\n3. Validates role exists\n4. Generates secure URL-safe token (32 bytes)\n5. Calculates expiry (7 days default)\n6. Saves to database\n7. Sends email via AWS SES with invitation link\n\n**Security:**\n- Secure random token (URL-safe)\n- 7-day expiry\n- Duplicate prevention\n- Permission checks\n\n**Authorization:** Requires permission to invite for the entity (org or workspace)",
+        "operationId": "send_invitation_api_v1_invitations_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendInvitationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendInvitationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "invitations"
+        ],
+        "summary": "List Invitations",
+        "description": "List invitations.\n\nReturns invitations sent by the authenticated user or\ninvitations for entities they manage.\n\n**Query Parameters:**\n- `entity_type`: Filter by organization or workspace\n- `entity_id`: Filter by specific entity\n- `status_filter`: Filter by status (pending, accepted, expired, revoked)\n\n**Authorization:** Requires authentication (JWT token)",
+        "operationId": "list_invitations_api_v1_invitations_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "entity_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Entity Type"
+            }
+          },
+          {
+            "name": "entity_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Entity Id"
+            }
+          },
+          {
+            "name": "status_filter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "pending",
+              "title": "Status Filter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvitationListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/invitations/{token}/accept": {
+      "post": {
+        "tags": [
+          "invitations"
+        ],
+        "summary": "Accept Invitation",
+        "description": "Accept an invitation.\n\nAccepts the invitation and adds the user to the organization or workspace.\n\n**Process:**\n1. Validates token is valid and not expired\n2. Checks if user exists (requires registration if not)\n3. Validates invitation status is pending\n4. Adds user as member with specified role\n5. Marks invitation as accepted\n\n**Note:** If the user doesn't exist yet, returns `requiresRegistration: true`\nand the frontend should redirect to registration first.\n\n**Authorization:** None required (uses token for authorization)",
+        "operationId": "accept_invitation_api_v1_invitations__token__accept_post",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptInvitationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcceptInvitationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/invitations/{invitation_id}": {
+      "delete": {
+        "tags": [
+          "invitations"
+        ],
+        "summary": "Revoke Invitation",
+        "description": "Revoke a pending invitation.\n\nRevokes an invitation that hasn't been accepted yet.\nOnly the person who sent the invitation can revoke it.\n\n**Authorization:** Must be the user who sent the invitation",
+        "operationId": "revoke_invitation_api_v1_invitations__invitation_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "invitation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Invitation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevokeInvitationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/marketplace/register": {
+      "post": {
+        "tags": [
+          "Marketplace"
+        ],
+        "summary": "Register Marketplace Customer",
+        "description": "AWS Marketplace registration redirect handler.\n\nReceives AWS Marketplace registration token and creates pending registration.",
+        "operationId": "register_marketplace_customer_api_v1_marketplace_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarketplaceRegistrationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketplaceRegistrationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid registration token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Registration already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/marketplace/link-account": {
+      "post": {
+        "tags": [
+          "Marketplace"
+        ],
+        "summary": "Link Aws Account",
+        "description": "Link AWS account to workspace.\n\nVerifies AWS subscription and links workspace to AWS Marketplace.",
+        "operationId": "link_aws_account_api_v1_marketplace_link_account_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountLinkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountLinkResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/marketplace/complete-registration": {
+      "post": {
+        "tags": [
+          "Marketplace"
+        ],
+        "summary": "Complete Registration",
+        "description": "Complete marketplace registration.\n\nFinalizes registration and returns AWS Marketplace redirect URL.",
+        "operationId": "complete_registration_api_v1_marketplace_complete_registration_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "registration_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Registration Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistrationCompleteResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Registration incomplete",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Root",
+        "description": "Health check endpoint.",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Root  Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health Check",
+        "description": "Detailed health check.",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Check Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/data-catalog": {
+      "get": {
+        "summary": "Get Data Catalog",
+        "description": "Data catalog endpoint - delegates to domain services.",
+        "operationId": "get_data_catalog_api_v1_data_catalog_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Data Catalog Api V1 Data Catalog Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/query": {
+      "get": {
+        "summary": "Query Interface",
+        "description": "Query interface endpoint - delegates to query-engine domain.",
+        "operationId": "query_interface_api_v1_query_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Query Interface Api V1 Query Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AcceptInvitationRequest": {
+        "properties": {
+
+        },
+        "type": "object",
+        "title": "AcceptInvitationRequest",
+        "description": "Request to accept an invitation.",
+        "example": {
+
+        }
+      },
+      "AcceptInvitationResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "entityType": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EntityType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "entityId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entityid"
+          },
+          "requiresRegistration": {
+            "type": "boolean",
+            "title": "Requiresregistration",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message"
+        ],
+        "title": "AcceptInvitationResponse",
+        "description": "Response after accepting invitation."
+      },
+      "AccountLinkRequest": {
+        "properties": {
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Workspaceid"
+          },
+          "registrationId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Registrationid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "workspaceId",
+          "registrationId"
+        ],
+        "title": "AccountLinkRequest",
+        "description": "Request to link AWS account."
+      },
+      "AccountLinkResponse": {
+        "properties": {
+          "linked": {
+            "type": "boolean",
+            "title": "Linked"
+          },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Workspaceid"
+          },
+          "customerIdentifier": {
+            "type": "string",
+            "title": "Customeridentifier"
+          },
+          "awsAccountId": {
+            "type": "string",
+            "title": "Awsaccountid"
+          },
+          "linkedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Linkedat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "linked",
+          "workspaceId",
+          "customerIdentifier",
+          "awsAccountId",
+          "linkedAt"
+        ],
+        "title": "AccountLinkResponse",
+        "description": "Response after linking AWS account."
+      },
+      "AddOrganizationMemberRequest": {
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Userid",
+            "description": "User ID to add as member"
+          },
+          "roleName": {
+            "type": "string",
+            "title": "Rolename",
+            "description": "Role name (e.g., org_admin, org_member)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "userId",
+          "roleName"
+        ],
+        "title": "AddOrganizationMemberRequest",
+        "description": "Request to add member to organization.",
+        "example": {
+          "roleName": "org_admin",
+          "userId": "550e8400-e29b-41d4-a716-446655440000"
+        }
+      },
+      "AddOrganizationMemberResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "organizationId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Organizationid"
+          },
+          "userId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Userid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message"
+        ],
+        "title": "AddOrganizationMemberResponse",
+        "description": "Response after adding member."
+      },
+      "CreateOrganizationRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 2,
+            "title": "Name",
+            "description": "Organization name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Organization description"
+          },
+          "settings": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Settings",
+            "description": "Organization settings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "CreateOrganizationRequest",
+        "description": "Request to create an organization.",
+        "example": {
+          "description": "A data-driven organization",
+          "name": "Acme Corp",
+          "settings": {
+            "billing_email": "billing@acme.com",
+            "timezone": "America/New_York"
+          }
+        }
+      },
+      "CreateOrganizationResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "organizationId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Organizationid"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message"
+        ],
+        "title": "CreateOrganizationResponse",
+        "description": "Response after creating organization."
+      },
+      "EntityType": {
+        "type": "string",
+        "enum": [
+          "organization",
+          "workspace"
+        ],
+        "title": "EntityType",
+        "description": "Entity type for invitation."
+      },
+      "ErrorResponse": {
+        "properties": {
+          "error": {
+            "type": "string",
+            "title": "Error",
+            "description": "Error code or type"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Human-readable error message"
+          },
+          "details": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details",
+            "description": "Additional error details"
+          }
+        },
+        "type": "object",
+        "required": [
+          "error",
+          "message"
+        ],
+        "title": "ErrorResponse",
+        "description": "Standard error response.",
+        "example": {
+          "details": {
+            "field": "email",
+            "issue": "Invalid format"
+          },
+          "error": "ValidationError",
+          "message": "Invalid input data"
+        }
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "InvitationListResponse": {
+        "properties": {
+          "invitations": {
+            "items": {
+              "$ref": "#/components/schemas/InvitationResponse"
+            },
+            "type": "array",
+            "title": "Invitations"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "invitations",
+          "total"
+        ],
+        "title": "InvitationListResponse",
+        "description": "List of invitations."
+      },
+      "InvitationResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "token": {
+            "type": "string",
+            "title": "Token"
+          },
+          "entityType": {
+            "$ref": "#/components/schemas/EntityType"
+          },
+          "entityId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Entityid"
+          },
+          "roleId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Roleid"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "invitedBy": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Invitedby"
+          },
+          "acceptedBy": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acceptedby"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expiresat"
+          },
+          "acceptedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acceptedat"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "token",
+          "entityType",
+          "entityId",
+          "roleId",
+          "status",
+          "invitedBy",
+          "expiresAt",
+          "createdAt"
+        ],
+        "title": "InvitationResponse",
+        "description": "Invitation details response."
+      },
+      "MarketplaceRegistrationRequest": {
+        "properties": {
+          "registrationToken": {
+            "type": "string",
+            "title": "Registrationtoken",
+            "description": "AWS Marketplace registration token from redirect URL"
+          }
+        },
+        "type": "object",
+        "required": [
+          "registrationToken"
+        ],
+        "title": "MarketplaceRegistrationRequest",
+        "description": "Request to register from AWS Marketplace.",
+        "example": {
+          "registrationToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        }
+      },
+      "MarketplaceRegistrationResponse": {
+        "properties": {
+          "registrationId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Registrationid",
+            "description": "Registration ID for tracking"
+          },
+          "customerIdentifier": {
+            "type": "string",
+            "title": "Customeridentifier",
+            "description": "AWS customer identifier"
+          },
+          "productCode": {
+            "type": "string",
+            "title": "Productcode",
+            "description": "AWS product code"
+          },
+          "redirectUrl": {
+            "type": "string",
+            "title": "Redirecturl",
+            "description": "URL to continue registration"
+          }
+        },
+        "type": "object",
+        "required": [
+          "registrationId",
+          "customerIdentifier",
+          "productCode",
+          "redirectUrl"
+        ],
+        "title": "MarketplaceRegistrationResponse",
+        "description": "Response after marketplace registration.",
+        "example": {
+          "customerIdentifier": "aws-cust-1234567890",
+          "productCode": "pathsdata-enterprise",
+          "redirectUrl": "https://app.pathsdata.com/signup?reg=550e8400-e29b-41d4-a716-446655440000",
+          "registrationId": "550e8400-e29b-41d4-a716-446655440000"
+        }
+      },
+      "OrganizationListResponse": {
+        "properties": {
+          "organizations": {
+            "items": {
+              "$ref": "#/components/schemas/OrganizationResponse"
+            },
+            "type": "array",
+            "title": "Organizations"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "organizations",
+          "total"
+        ],
+        "title": "OrganizationListResponse",
+        "description": "List of organizations."
+      },
+      "OrganizationResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "ownerId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Ownerid"
+          },
+          "settings": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Settings"
+          },
+          "isActive": {
+            "type": "boolean",
+            "title": "Isactive"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updatedat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "ownerId",
+          "isActive",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "OrganizationResponse",
+        "description": "Organization details response."
+      },
+      "RegistrationCompleteResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Completion status"
+          },
+          "redirectUrl": {
+            "type": "string",
+            "title": "Redirecturl",
+            "description": "AWS Marketplace redirect URL"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "redirectUrl"
+        ],
+        "title": "RegistrationCompleteResponse",
+        "description": "Response after completing registration.",
+        "example": {
+          "redirectUrl": "https://aws.amazon.com/marketplace/saas/subscription?productId=xxx&action=complete",
+          "status": "complete"
+        }
+      },
+      "RemoveOrganizationMemberResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "organizationId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Organizationid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message"
+        ],
+        "title": "RemoveOrganizationMemberResponse",
+        "description": "Response after removing member."
+      },
+      "RequestOTPRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email",
+            "description": "User email address"
+          },
+          "purpose": {
+            "type": "string",
+            "title": "Purpose",
+            "description": "Purpose: signin, signup, reset_password",
+            "default": "signin"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "RequestOTPRequest",
+        "description": "Request to send OTP to email.",
+        "example": {
+          "email": "user@example.com",
+          "purpose": "signin"
+        }
+      },
+      "RequestOTPResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "expiresInMinutes": {
+            "type": "integer",
+            "title": "Expiresinminutes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message",
+          "email",
+          "expiresInMinutes"
+        ],
+        "title": "RequestOTPResponse",
+        "description": "Response after requesting OTP."
+      },
+      "ResendOTPRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email",
+            "description": "User email address"
+          },
+          "purpose": {
+            "type": "string",
+            "title": "Purpose",
+            "description": "Purpose: signin, signup, reset_password",
+            "default": "signin"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "ResendOTPRequest",
+        "description": "Request to resend OTP.",
+        "example": {
+          "email": "user@example.com",
+          "purpose": "signin"
+        }
+      },
+      "ResendOTPResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "expiresInMinutes": {
+            "type": "integer",
+            "title": "Expiresinminutes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message",
+          "email",
+          "expiresInMinutes"
+        ],
+        "title": "ResendOTPResponse",
+        "description": "Response after resending OTP."
+      },
+      "RevokeInvitationResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "invitationId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invitationid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message"
+        ],
+        "title": "RevokeInvitationResponse",
+        "description": "Response after revoking invitation."
+      },
+      "SendInvitationRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email",
+            "description": "Email address to send invitation to"
+          },
+          "entityType": {
+            "$ref": "#/components/schemas/EntityType",
+            "description": "Type: organization or workspace"
+          },
+          "entityId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Entityid",
+            "description": "ID of organization or workspace"
+          },
+          "roleName": {
+            "type": "string",
+            "title": "Rolename",
+            "description": "Role name (e.g., org_admin, workspace_member)"
+          },
+          "inviterName": {
+            "type": "string",
+            "title": "Invitername",
+            "description": "Name of person sending invitation"
+          },
+          "entityName": {
+            "type": "string",
+            "title": "Entityname",
+            "description": "Name of organization or workspace"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "entityType",
+          "entityId",
+          "roleName",
+          "inviterName",
+          "entityName"
+        ],
+        "title": "SendInvitationRequest",
+        "description": "Request to send an invitation.",
+        "example": {
+          "email": "colleague@example.com",
+          "entityId": "550e8400-e29b-41d4-a716-446655440000",
+          "entityName": "Acme Corp",
+          "entityType": "organization",
+          "inviterName": "John Doe",
+          "roleName": "org_admin"
+        }
+      },
+      "SendInvitationResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "invitationId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invitationid"
+          },
+          "token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message"
+        ],
+        "title": "SendInvitationResponse",
+        "description": "Response after sending invitation."
+      },
+      "UpdateOrganizationRequest": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "Organization name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Organization description"
+          },
+          "settings": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Settings",
+            "description": "Organization settings"
+          }
+        },
+        "type": "object",
+        "title": "UpdateOrganizationRequest",
+        "description": "Request to update organization.",
+        "example": {
+          "description": "Updated description",
+          "name": "Acme Corporation",
+          "settings": {
+            "billing_email": "billing@acme.com",
+            "max_workspaces": 10
+          }
+        }
+      },
+      "UpdateOrganizationResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "organizationId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Organizationid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message"
+        ],
+        "title": "UpdateOrganizationResponse",
+        "description": "Response after updating organization."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "VerifyOTPRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email",
+            "description": "User email address"
+          },
+          "otpCode": {
+            "type": "string",
+            "maxLength": 6,
+            "minLength": 6,
+            "title": "Otpcode",
+            "description": "6-digit OTP code"
+          },
+          "purpose": {
+            "type": "string",
+            "title": "Purpose",
+            "description": "Purpose: signin, signup, reset_password",
+            "default": "signin"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "otpCode"
+        ],
+        "title": "VerifyOTPRequest",
+        "description": "Request to verify OTP code.",
+        "example": {
+          "email": "user@example.com",
+          "otpCode": "123456",
+          "purpose": "signin"
+        }
+      },
+      "VerifyOTPResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "userId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Userid"
+          },
+          "accessToken": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accesstoken"
+          },
+          "tokenType": {
+            "type": "string",
+            "title": "Tokentype",
+            "default": "bearer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message"
+        ],
+        "title": "VerifyOTPResponse",
+        "description": "Response after verifying OTP."
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

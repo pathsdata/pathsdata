@@ -1,7 +1,10 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Modal } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { sendInvitation, getRoles } from "../../../services/api";
 import "./OTPVerify.css"
+
 const initialState = {
   name: "",
   email_id: "",
@@ -11,14 +14,15 @@ const initialState = {
 const CreateUsers = ({ show, handleClose, GetUserList }) => {
   const navigate = useNavigate();
 
-  const familyId = localStorage.getItem("family_id");
+  // Support both workspace_id (new) and family_id (legacy) for backward compatibility
+  const workspaceId = localStorage.getItem("workspace_id") || localStorage.getItem("family_id");
   const UserOrgId = localStorage.getItem("user_org_id");
 
   const [roleList, setRoleList] = useState([]);
 
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState(initialState);
-  console.log(formData, familyId);
+  console.log(formData, workspaceId);
 
   const handleCloseHide = () => {
     handleClose();
@@ -34,86 +38,59 @@ const CreateUsers = ({ show, handleClose, GetUserList }) => {
     }));
   };
 
-  // const handleSubmit = async (e) => {
-  //     e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
 
-  //     console.log(formData);
+    try {
+      // Prepare payload according to OpenAPI schema
+      const payload = {
+        email: formData.email_id,
+        entityType: UserOrgId ? "organization" : "workspace",
+        entityId: UserOrgId || workspaceId,
+        roleName: formData.role,
+        inviterName: formData.name || "Admin", // Using name from form or default
+        entityName: "Organization", // TODO: Fetch actual organization/workspace name
+      };
 
-  //     setLoading(true);
+      const res = await sendInvitation(payload);
 
-  //     try {
-  //         const url = UserOrgId
-  //             ? `/organization/invite_user`
-  //             : `/family/invite_user`;
+      if (res?.data?.statusCode === 200 || res?.data) {
+        toast.success(res?.data?.message || "Invitation sent successfully");
+        setFormData(initialState);
+        handleClose();
+        GetUserList();
+      }
+    } catch (err) {
+      console.error("Error sending invitation:", err);
+      // Error handling is done by Axios interceptor
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  //         const payload = {
-  //             ...formData,
-  //             ...(UserOrgId ? { org_id: UserOrgId } : { family_id: familyId }),
-  //         }
+  const GetRoleList = useCallback(async () => {
+    try {
+      const params = UserOrgId
+        ? { org_id: UserOrgId }
+        : { workspace_id: workspaceId };
 
-  //         const res = await Axios.post(url, payload, authorizationHeaders());
+      const res = await getRoles(params);
 
-  //         if (res?.data?.statusCode === 200) {
-  //             toast.success(res?.data?.message);
-  //             setFormData(initialState);
-  //             handleClose();
-  //             GetUserList();
-  //         } else {
-  //             toast.error(res?.data?.message);
-  //         }
-  //     } catch (err) {
-  //         console.error("Error Post-User++", err);
-  //         if (err?.message === "Network Error") {
-  //             toast.error(err?.message);
-  //         }
-  //         if (err?.response?.data?.statusCode === 400) {
-  //             toast.error(err?.response?.data?.message);
-  //         }
-  //         if (err?.response?.data?.statusCode === "440") {
-  //             toast.error("Session expired. Please log in again.");
-  //             localStorage.clear();
-  //             localStorage.setItem("openCloudOption", false);
-  //             navigate("/sign-in");
-  //         } else {
-  //             toast.error(err?.response?.data?.message || "An error occurred");
-  //         }
-  //     } finally {
-  //         setLoading(false);
-  //     }
-  // };
+      if (res?.data?.statusCode === 200 || res?.data) {
+        setRoleList(res?.data?.data || res?.data);
+      }
+    } catch (err) {
+      console.error("Error fetching roles:", err);
+      // Error handling is done by Axios interceptor
+    }
+  }, [UserOrgId, workspaceId]);
 
-  // const GetRoleList = async () => {
-  //     try {
-  //         const url = UserOrgId
-  //             ? `/roles?org_id=${UserOrgId}`
-  //             : `/roles?family_id=${familyId}`;
-
-  //         const res = await Axios.get(url, authorizationHeaders());
-
-  //         if (res?.data?.statusCode === 200) {
-  //             setRoleList(res?.data?.data);
-  //         }
-  //         else {
-  //             toast.error(res.data?.message);
-  //         }
-
-  //     } catch (err) {
-  //         console.error("Error Role++", err);
-
-  //         if (err?.response?.data?.statusCode === "440") {
-  //             toast.error("Session expired. Please log in again.");
-  //             localStorage.clear();
-  //             localStorage.setItem("openCloudOption", false);
-  //             navigate("/sign-in");
-  //         } else {
-  //             toast.error(err?.response?.data?.message || "An error occurred");
-  //         }
-  //     }
-  // }
-
-  // useEffect(() => {
-  //     GetRoleList();
-  // }, [])
+  useEffect(() => {
+    if (show) {
+      GetRoleList();
+    }
+  }, [show, GetRoleList])
 
   return (
     <Modal show={show} onHide={handleCloseHide} centered className="user-modal">
@@ -135,7 +112,7 @@ const CreateUsers = ({ show, handleClose, GetUserList }) => {
           </p>
         </div>
         <div className="mt-4">
-          <form>
+          <form onSubmit={handleSubmit}>
             <div className="add-input d-inline mb-4">
               <label htmlFor="name" className="form-label">
                 Name

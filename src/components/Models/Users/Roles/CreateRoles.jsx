@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import { useState } from "react";
 import { Modal } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
 import "../OTPVerify.css";
+
 const initialState = {
   name: "",
   description_id: "",
@@ -9,17 +9,9 @@ const initialState = {
   role: "",
 };
 
-const CreateRoles = ({ show, handleClose, GetUserList }) => {
-  const navigate = useNavigate();
-
-  const familyId = localStorage.getItem("family_id");
-  const UserOrgId = localStorage.getItem("user_org_id");
-
-  const [roleList, setRoleList] = useState([]);
-
-  const [loading, setLoading] = useState(false);
+const CreateRoles = ({ show, handleClose }) => {
+  const [loading] = useState(false);
   const [formData, setFormData] = useState(initialState);
-  console.log(formData, familyId);
 
   const handleCloseHide = () => {
     handleClose();

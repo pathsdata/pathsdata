@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import profileUser from "../../../assets/images/profile.png";
 import profileselect from "../../../assets/images/profile-select.png";
-import { useNavigate } from "react-router-dom";
+import { createProfile } from "../../../services/api";
+import { countries, languages } from "../../../constants/countries";
 import "../SignIn.css";
 
 const CreateProfile = () => {
@@ -44,41 +47,37 @@ const CreateProfile = () => {
   };
 
   const handleCreateProfile = async (e) => {
-    // navigate("/subscription");
     e.preventDefault();
-    navigate("/create-organization");
-    // setLoading(true);
-    // const { email_id, name, language, country } = profile;
+    setLoading(true);
 
-    // if (
-    //   !email_id.trim() ||
-    //   !name.trim() ||
-    //   !country.trim() ||
-    //   !language.trim()
-    // ) {
-    //   toast.error("Please fill in all required fields."); // Display error toast
-    //   return; // Stop submission
-    // }
+    const { email_id, name, language, country } = profile;
 
-    // try {
-    //   const res = await Axios.post(`/profile`, profile);
-    //   console.log('====================================');
-    //   console.log("handleCreateProfileres", res);
-    //   console.log('====================================');
+    if (
+      !email_id.trim() ||
+      !name.trim() ||
+      !country.trim() ||
+      !language.trim()
+    ) {
+      toast.error("Please fill in all required fields.");
+      setLoading(false);
+      return;
+    }
 
-    //   if (res?.data?.statusCode === 200) {
-    //     toast.success("Profile created successfully");
+    try {
+      const res = await createProfile(profile);
 
-    //     localStorage.setItem("jwt_token", res?.data?.jwt_token);
-    //     navigate("/home");
-    //   } else {
-    //     console.error("Error creating profile:");
-    //   }
-    // } catch (error) {
-    //   console.error("Error:", error);
-    // } finally {
-    //   setLoading(false)
-    // }
+      if (res?.data?.success || res?.data?.statusCode === 200) {
+        toast.success(res?.data?.message || "Profile created successfully");
+        // Note: JWT token was already set during sign-in/verify-otp flow
+        // Profile creation is an authenticated endpoint that updates user profile
+        navigate("/create-organization");
+      }
+    } catch (error) {
+      console.error("Error creating profile:", error);
+      // Error handling is done by Axios interceptor
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -131,7 +130,7 @@ const CreateProfile = () => {
               />
             </div>
 
-            <div className="">
+            <div className="mb-4">
               <label htmlFor="country" className="form-label">
                 Country
               </label>
@@ -146,6 +145,26 @@ const CreateProfile = () => {
                 {countries.map((country, index) => (
                   <option key={index} value={country}>
                     {country}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="">
+              <label htmlFor="language" className="form-label">
+                Language
+              </label>
+              <select
+                name="language"
+                id="language"
+                value={profile.language}
+                onChange={handleInputChange}
+                className="form-control form-select"
+              >
+                <option value="">Please select language</option>
+                {languages.map((language, index) => (
+                  <option key={index} value={language}>
+                    {language}
                   </option>
                 ))}
               </select>
@@ -176,190 +195,3 @@ const CreateProfile = () => {
 };
 
 export default CreateProfile;
-
-export const countries = [
-  "Afghanistan",
-  "Albania",
-  "Algeria",
-  "Andorra",
-  "Angola",
-  "Argentina",
-  "Armenia",
-  "Australia",
-  "Austria",
-  "Azerbaijan",
-  "Bahamas",
-  "Bahrain",
-  "Bangladesh",
-  "Barbados",
-  "Belarus",
-  "Belgium",
-  "Belize",
-  "Benin",
-  "Bhutan",
-  "Bolivia",
-  "Bosnia and Herzegovina",
-  "Botswana",
-  "Brazil",
-  "Brunei",
-  "Bulgaria",
-  "Burkina Faso",
-  "Burundi",
-  "Cambodia",
-  "Cameroon",
-  "Canada",
-  "Cape Verde",
-  "Central African Republic",
-  "Chad",
-  "Chile",
-  "China",
-  "Colombia",
-  "Comoros",
-  "Congo",
-  "Costa Rica",
-  "Croatia",
-  "Cuba",
-  "Cyprus",
-  "Czech Republic",
-  "Denmark",
-  "Djibouti",
-  "Dominica",
-  "Dominican Republic",
-  "Ecuador",
-  "Egypt",
-  "El Salvador",
-  "Equatorial Guinea",
-  "Eritrea",
-  "Estonia",
-  "Eswatini",
-  "Ethiopia",
-  "Fiji",
-  "Finland",
-  "France",
-  "Gabon",
-  "Gambia",
-  "Georgia",
-  "Germany",
-  "Ghana",
-  "Greece",
-  "Grenada",
-  "Guatemala",
-  "Guinea",
-  "Guyana",
-  "Haiti",
-  "Honduras",
-  "Hungary",
-  "Iceland",
-  "India",
-  "Indonesia",
-  "Iran",
-  "Iraq",
-  "Ireland",
-  "Israel",
-  "Italy",
-  "Jamaica",
-  "Japan",
-  "Jordan",
-  "Kazakhstan",
-  "Kenya",
-  "Kiribati",
-  "Kuwait",
-  "Kyrgyzstan",
-  "Laos",
-  "Latvia",
-  "Lebanon",
-  "Lesotho",
-  "Liberia",
-  "Libya",
-  "Liechtenstein",
-  "Lithuania",
-  "Luxembourg",
-  "Madagascar",
-  "Malawi",
-  "Malaysia",
-  "Maldives",
-  "Mali",
-  "Malta",
-  "Mauritania",
-  "Mauritius",
-  "Mexico",
-  "Moldova",
-  "Monaco",
-  "Mongolia",
-  "Montenegro",
-  "Morocco",
-  "Mozambique",
-  "Myanmar",
-  "Namibia",
-  "Nauru",
-  "Nepal",
-  "Netherlands",
-  "New Zealand",
-  "Nicaragua",
-  "Niger",
-  "Nigeria",
-  "North Korea",
-  "Norway",
-  "Oman",
-  "Pakistan",
-  "Palestine",
-  "Panama",
-  "Papua New Guinea",
-  "Paraguay",
-  "Peru",
-  "Philippines",
-  "Poland",
-  "Portugal",
-  "Qatar",
-  "Romania",
-  "Russia",
-  "Rwanda",
-  "Saint Kitts and Nevis",
-  "Saint Lucia",
-  "Samoa",
-  "San Marino",
-  "Saudi Arabia",
-  "Senegal",
-  "Serbia",
-  "Seychelles",
-  "Sierra Leone",
-  "Singapore",
-  "Slovakia",
-  "Slovenia",
-  "Solomon Islands",
-  "Somalia",
-  "South Africa",
-  "South Korea",
-  "South Sudan",
-  "Spain",
-  "Sri Lanka",
-  "Sudan",
-  "Suriname",
-  "Sweden",
-  "Switzerland",
-  "Syria",
-  "Tajikistan",
-  "Tanzania",
-  "Thailand",
-  "Togo",
-  "Tonga",
-  "Trinidad and Tobago",
-  "Tunisia",
-  "Turkey",
-  "Turkmenistan",
-  "Tuvalu",
-  "Uganda",
-  "Ukraine",
-  "United Arab Emirates",
-  "United Kingdom",
-  "United States",
-  "Uruguay",
-  "Uzbekistan",
-  "Vanuatu",
-  "Vatican City",
-  "Venezuela",
-  "Vietnam",
-  "Yemen",
-  "Zambia",
-  "Zimbabwe",
-];

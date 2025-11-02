@@ -1,9 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-// import { authorizationHeaders, Axios } from "../../helper/Axios";
-// import { toast } from "react-toastify";
 import "./WorkspaceCreate.css";
 
 import first from "../../assets/images/workspace/1.svg";
@@ -15,10 +13,7 @@ import left_arrow from "../../assets/images/nvigation_arrows/left_arrow.png";
 const AddWorkspace = () => {
   const navigate = useNavigate();
   const OrgFamily = JSON.parse(localStorage.getItem("openOrgFamily"));
-  const OrgId = localStorage.getItem("org_id");
 
-  const [loader, setLoader] = useState(false);
-  const [organizationData, setOrganizationData] = useState([]);
   const [selectedOption, setSelectedOption] = useState("existing");
 
   const [formData, setFormData] = useState({

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import WorkspaceSidebar from "../../components/workspace/WorkspaceSidebar";
 import Logout from "../../components/Models/Logout/Logout";
