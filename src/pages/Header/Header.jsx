@@ -1,10 +1,10 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import notification1 from "../../assets/images/notification1.png";
 import dummyuser from "../../assets/images/dummy-user.jpg";
 import bottomarrow from "../../assets/images/bottom-arrow.png";
 import "./Header.css";
-import { useState } from "react";
+import { getProfile } from "../../services/api";
 
 const Header = ({ mobileToggle, setMobileToggle, handleLogout }) => {
   const navigate = useNavigate();
@@ -13,6 +13,31 @@ const Header = ({ mobileToggle, setMobileToggle, handleLogout }) => {
   const [headerTitle, setHeaderTitle] = useState("");
   const [profileData, setProfileData] = useState({});
   const [profileImage, setProfileImage] = useState("");
+
+  // Fetch user profile data
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await getProfile();
+        if (response?.data) {
+          setProfileData(response.data);
+          // If profile has a picture, set it
+          if (response.data.profilePictureUrl) {
+            setProfileImage(response.data.profilePictureUrl);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+        // Fallback to email from localStorage if API fails
+        const email = localStorage.getItem("email");
+        if (email) {
+          setProfileData({ email, fullName: email.split("@")[0] });
+        }
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   useEffect(() => {
     let name = "";
@@ -150,12 +175,11 @@ const Header = ({ mobileToggle, setMobileToggle, handleLogout }) => {
                 aria-expanded="false"
               >
                 <img
-                  src={dummyuser}
+                  src={profileImage || dummyuser}
                   className="theme-color-default-img img-fluid avatar avatar-40 avatar-rounded rounded-circle logo"
                   loading="lazy"
                 />
-                {/* } */}
-                {profileData?.name} Jameson S.
+                {profileData?.fullName || profileData?.email || "User"}
                 <img src={bottomarrow} className="profile-arrow" />
               </Link>
 

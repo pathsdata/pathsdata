@@ -191,6 +191,28 @@ export const deleteWorkspace = (workspaceId) => {
   return Axios.delete(`/api/v1/workspaces/${workspaceId}`);
 };
 
+/**
+ * List organization members
+ * GET /api/v1/organizations/{organization_id}/members
+ * @param {string} organizationId - UUID of organization
+ * @param {Object} params - { limit?: number, offset?: number }
+ * @returns {Promise} Response with paginated members list
+ */
+export const listOrganizationMembers = (organizationId, params = {}) => {
+  return Axios.get(`/api/v1/organizations/${organizationId}/members`, { params });
+};
+
+/**
+ * List workspace members
+ * GET /api/v1/workspaces/{workspace_id}/members
+ * @param {string} workspaceId - UUID of workspace
+ * @param {Object} params - { limit?: number, offset?: number }
+ * @returns {Promise} Response with paginated members list
+ */
+export const listWorkspaceMembers = (workspaceId, params = {}) => {
+  return Axios.get(`/api/v1/workspaces/${workspaceId}/members`, { params });
+};
+
 // ============================================================================
 // INVITATION ENDPOINTS
 // ============================================================================
@@ -484,6 +506,7 @@ export default {
   deleteOrganization,
   addOrganizationMember,
   removeOrganizationMember,
+  listOrganizationMembers,
 
   // Workspaces
   listWorkspaces,
@@ -491,6 +514,7 @@ export default {
   getWorkspace,
   updateWorkspace,
   deleteWorkspace,
+  listWorkspaceMembers,
 
   // Invitations
   sendInvitation,

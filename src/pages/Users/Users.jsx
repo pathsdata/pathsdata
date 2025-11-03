@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import plusicon from "../../assets/images/plus.png";
 import filter from "../../assets/images/filter.png";
 import upicon from "../../assets/images/upIcon.png";
@@ -11,7 +12,12 @@ import editbtn from "../../assets/images/edit-btn.png";
 import deletebtn from "../../assets/images/delete-btn.png";
 import organization_family from "../../assets/images/organization_family.png";
 import CreateUsers from "../../components/Models/Users/CreateUsers";
+import EditUsers from "../../components/Models/Users/EditUsers";
 import searchIcon from "../../assets/images/search.png";
+import {
+  listOrganizationMembers,
+  removeOrganizationMember
+} from "../../services/api";
 
 // import "./WorkspaceCreate.css";
 const initialState = {
@@ -23,40 +29,63 @@ const initialState = {
 const Users = () => {
   const navigate = useNavigate();
 
-  // Static user data matching the image content
-  const [userData, setUserData] = useState([
-    {
-      id: "1",
-      name: "Tarun Vaghesiyo 1",
-      email: "turunvaghesiyo@gmail.com",
-      role: "fsm_owner",
-      status: "active",
-    },
-    {
-      id: "2",
-      name: "Tarun Vaghesiyo 2",
-      email: "turunvaghesiyo@gmail.com",
-      role: "fsm_editor",
-      status: "active",
-    },
-    {
-      id: "3",
-      name: "Tarun Vaghesiyo 3",
-      email: "turunvaghesiyo@gmail.com",
-      role: "fsm_viewer",
-      status: "pending_invite",
-    },
-  ]);
+  const [userData, setUserData] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]); // store user ids
   const [sortOrder, setSortOrder] = useState("asc");
   const [isChecked, setIsChecked] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [show, setShow] = useState(initialState);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [deleteId, setDeleteId] = useState("");
 
   // Filtered data derived from search query (case-insensitive)
   const filteredData = userData.filter((user) =>
     user.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Fetch members from API
+  const fetchMembers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const UserOrgId = localStorage.getItem("user_org_id");
+      if (!UserOrgId) {
+        toast.error("Organization ID not found");
+        return;
+      }
+
+      const response = await listOrganizationMembers(UserOrgId);
+
+      if (response?.data?.members) {
+        // Transform API response to match table format
+        const transformedData = response.data.members.map(member => ({
+          id: member.userId,
+          name: member.fullName || "N/A",
+          email: member.email,
+          role: member.roleName,
+          roleId: member.roleId,
+          // WorkspaceMemberResponse has status, OrganizationMemberResponse doesn't
+          // Assume "active" for org members (since they've joined)
+          status: member.status || "active",
+          isOwner: member.isOwner,
+          joinedAt: member.joinedAt
+        }));
+        setUserData(transformedData);
+      }
+    } catch (error) {
+      console.error("Error fetching members:", error);
+      // Error handling done by Axios interceptor
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Fetch members on component mount
+  useEffect(() => {
+    fetchMembers();
+  }, [fetchMembers]);
+
   const handleClose = () => {
     setShow(initialState);
     setDeleteId("");
@@ -103,13 +132,27 @@ const Users = () => {
   };
 
   const handleEdit = (user) => {
-    console.log("Editing user:", user.name);
-    // navigate("/edit-user", { state: { user } });
+    setSelectedUser(user);
+    setShowEditModal(true);
   };
 
-  const handleDelete = (userId) => {
-    console.log("Deleting user:", userId);
-    setUserData(userData.filter((user) => user.id !== userId));
+  const handleDelete = async (userId) => {
+    if (!window.confirm("Are you sure you want to remove this user?")) {
+      return;
+    }
+
+    try {
+      const UserOrgId = localStorage.getItem("user_org_id");
+      await removeOrganizationMember(UserOrgId, userId);
+
+      toast.success("User removed successfully");
+
+      // Refresh the users list
+      fetchMembers();
+    } catch (error) {
+      console.error("Error removing user:", error);
+      // Error handling done by Axios interceptor
+    }
   };
 
   return (
@@ -166,7 +209,14 @@ const Users = () => {
               </div>
 
               <div className="second table-responsive">
-                {filteredData.length === 0 ? (
+                {loading ? (
+                  <div className="data-not-found my-5">
+                    <div className="spinner-border text-primary" role="status">
+                      <span className="visually-hidden">Loading...</span>
+                    </div>
+                    <div className="mt-2">Loading users...</div>
+                  </div>
+                ) : filteredData.length === 0 ? (
                   <div className="data-not-found my-5">No Users Found</div>
                 ) : (
                   <>
@@ -305,7 +355,18 @@ const Users = () => {
           </div>
         </div>
       </section>
-      <CreateUsers show={show.createUser} handleClose={handleClose} />
+      <CreateUsers show={show.createUser} handleClose={handleClose} GetUserList={fetchMembers} />
+      {showEditModal && (
+        <EditUsers
+          show={showEditModal}
+          handleClose={() => {
+            setShowEditModal(false);
+            setSelectedUser(null);
+          }}
+          user={selectedUser}
+          GetUserList={fetchMembers}
+        />
+      )}
     </>
   );
 };
