@@ -123,6 +123,75 @@ export const removeOrganizationMember = (organizationId, memberUserId) => {
 };
 
 // ============================================================================
+// WORKSPACE ENDPOINTS
+// ============================================================================
+
+/**
+ * List workspaces
+ * GET /api/v1/workspaces
+ * @returns {Promise} Response with workspaces array
+ */
+export const listWorkspaces = () => {
+  return Axios.get('/api/v1/workspaces');
+};
+
+/**
+ * Create a new workspace
+ * POST /api/v1/workspaces
+ * @param {Object} data - {
+ *   name: string (3-64 chars),
+ *   awsRegion: string,
+ *   settings?: {
+ *     dataRetentionDays?: number,
+ *     enableAuditLogs?: boolean,
+ *     notificationEmail?: string
+ *   }
+ * }
+ * @returns {Promise} Response with created workspace
+ */
+export const createWorkspace = (data) => {
+  return Axios.post('/api/v1/workspaces', data);
+};
+
+/**
+ * Get workspace details
+ * GET /api/v1/workspaces/{workspace_id}
+ * @param {string} workspaceId - UUID of workspace
+ * @returns {Promise} Response with workspace details
+ */
+export const getWorkspace = (workspaceId) => {
+  return Axios.get(`/api/v1/workspaces/${workspaceId}`);
+};
+
+/**
+ * Update workspace details
+ * PATCH /api/v1/workspaces/{workspace_id}
+ * @param {string} workspaceId - UUID of workspace
+ * @param {Object} data - {
+ *   name?: string (3-64 chars),
+ *   settings?: {
+ *     dataRetentionDays?: number,
+ *     enableAuditLogs?: boolean,
+ *     notificationEmail?: string
+ *   }
+ * }
+ * @returns {Promise} Response with updated workspace
+ */
+export const updateWorkspace = (workspaceId, data) => {
+  return Axios.patch(`/api/v1/workspaces/${workspaceId}`, data);
+};
+
+/**
+ * Delete (soft-delete) workspace
+ * DELETE /api/v1/workspaces/{workspace_id}
+ * @param {string} workspaceId - UUID of workspace
+ * @returns {Promise} 204 No Content response
+ */
+export const deleteWorkspace = (workspaceId) => {
+  return Axios.delete(`/api/v1/workspaces/${workspaceId}`);
+};
+
+// ============================================================================
 // INVITATION ENDPOINTS
 // ============================================================================
 
@@ -272,67 +341,82 @@ export const createProfile = (data) => {
 };
 
 // ============================================================================
-// LEGACY/UNDOCUMENTED ENDPOINTS
-// ⚠️ WARNING: These endpoints are used in the codebase but NOT documented in OpenAPI v0.1.0
-// See missing-apis-spec.md for detailed specifications
+// ADDITIONAL ENDPOINTS
+// These endpoints are now documented in api-schema.json (updated 2025-01-03)
 // ============================================================================
 
 /**
  * Get subscription details
- * GET /subscription
- * ⚠️ LEGACY - Not in OpenAPI schema
+ * GET /api/v1/subscriptions
  * @returns {Promise} Response with subscription details
  */
 export const getSubscription = () => {
-  return Axios.get('/subscription');
+  return Axios.get('/api/v1/subscriptions');
 };
 
 /**
  * Delete subscription
- * DELETE /subscription
- * ⚠️ LEGACY - Not in OpenAPI schema
+ * DELETE /api/v1/subscriptions
  * @returns {Promise} Response with deletion confirmation
  */
 export const deleteSubscription = () => {
-  return Axios.delete('/subscription');
+  return Axios.delete('/api/v1/subscriptions');
 };
 
 /**
  * Get roles for organization or workspace
- * GET /roles
- * ⚠️ LEGACY - Not in OpenAPI schema
+ * GET /api/v1/roles
  * @param {Object} params - { org_id?: string, workspace_id?: string }
  * @returns {Promise} Response with roles array
  */
 export const getRoles = (params = {}) => {
-  return Axios.get('/roles', { params });
+  return Axios.get('/api/v1/roles', { params });
 };
 
 /**
- * Update organization users
- * PATCH /organization/users
- * ⚠️ LEGACY - Not in OpenAPI schema
- * @param {Object} data - User update data
- * @returns {Promise} Response with updated user
+ * Update organization member role
+ * PATCH /api/v1/organizations/{organization_id}/members/{member_user_id}
+ * @param {string} organizationId - UUID of organization
+ * @param {string} memberUserId - UUID of member to update
+ * @param {Object} data - { roleId: string (UUID) }
+ * @returns {Promise} Response with updated member
+ */
+export const updateOrganizationMember = (organizationId, memberUserId, data) => {
+  return Axios.patch(`/api/v1/organizations/${organizationId}/members/${memberUserId}`, data);
+};
+
+/**
+ * @deprecated Use updateOrganizationMember instead
+ * Kept for backward compatibility
  */
 export const updateOrganizationUsers = (data) => {
+  // Legacy endpoint - code should be migrated to use updateOrganizationMember
   return Axios.patch('/organization/users', data);
 };
 
 /**
- * Update workspace users
- * PATCH /workspace/users
- * ⚠️ LEGACY - Not in OpenAPI schema
- * Note: Should be migrated to PATCH /api/v1/workspaces/{workspace_id}/members/{user_id}
- * @param {Object} data - User update data
- * @returns {Promise} Response with updated user
+ * Update workspace member role
+ * PATCH /api/v1/workspaces/{workspace_id}/members/{member_user_id}
+ * @param {string} workspaceId - UUID of workspace
+ * @param {string} memberUserId - UUID of member to update
+ * @param {Object} data - { roleId: string (UUID) }
+ * @returns {Promise} Response with updated member
+ */
+export const updateWorkspaceMember = (workspaceId, memberUserId, data) => {
+  return Axios.patch(`/api/v1/workspaces/${workspaceId}/members/${memberUserId}`, data);
+};
+
+/**
+ * @deprecated Use updateWorkspaceMember instead
+ * Kept for backward compatibility
  */
 export const updateWorkspaceUsers = (data) => {
+  // Legacy endpoint - code should be migrated to use updateWorkspaceMember
   return Axios.patch('/workspace/users', data);
 };
 
 /**
- * @deprecated Use updateWorkspaceUsers instead
+ * @deprecated Use updateWorkspaceMember instead
  * Kept for backward compatibility
  */
 export const updateFamilyUsers = updateWorkspaceUsers;
@@ -368,15 +452,21 @@ export const inviteWorkspaceUser = (data) => {
 export const inviteFamilyUser = inviteWorkspaceUser;
 
 /**
- * Create network/VPC for a workspace
- * POST /network
- * ⚠️ LEGACY - Not in OpenAPI schema
- * Note: Should be migrated to POST /api/v1/workspaces/{workspace_id}/networks
- * @param {Object} data - Network configuration data (includes workspace_id, formerly family_id)
- * @returns {Promise} Response with created network
+ * Create network/VPC configuration for a workspace
+ * POST /api/v1/workspaces/{workspace_id}/networks
+ * @param {string} workspaceId - UUID of workspace
+ * @param {Object} data - {
+ *   vpcName: string,
+ *   vpcId: string,
+ *   region?: string,
+ *   subnetIds: string[],
+ *   securityGroupIds: string[],
+ *   endpoint: string
+ * }
+ * @returns {Promise} Response with created network configuration
  */
-export const createNetwork = (data) => {
-  return Axios.post('/network', data);
+export const createNetwork = (workspaceId, data) => {
+  return Axios.post(`/api/v1/workspaces/${workspaceId}/networks`, data);
 };
 
 // Export all as named exports
@@ -394,6 +484,13 @@ export default {
   deleteOrganization,
   addOrganizationMember,
   removeOrganizationMember,
+
+  // Workspaces
+  listWorkspaces,
+  createWorkspace,
+  getWorkspace,
+  updateWorkspace,
+  deleteWorkspace,
 
   // Invitations
   sendInvitation,
@@ -413,17 +510,29 @@ export default {
   // Health
   healthCheck,
 
-  // Legacy/Additional
+  // Profile
   getProfile,
   createProfile,
+
+  // Subscriptions
   getSubscription,
   deleteSubscription,
+
+  // Roles
   getRoles,
-  updateOrganizationUsers,
-  updateWorkspaceUsers,
+
+  // Member Management
+  updateOrganizationMember,
+  updateWorkspaceMember,
+  updateOrganizationUsers, // deprecated alias
+  updateWorkspaceUsers, // deprecated alias
   updateFamilyUsers, // deprecated alias
+
+  // Legacy Invitations
   inviteOrganizationUser,
   inviteWorkspaceUser,
   inviteFamilyUser, // deprecated alias
+
+  // Networks
   createNetwork,
 };

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Modal } from 'react-bootstrap';
 import { toast } from 'react-toastify';
-import { getRoles, updateOrganizationUsers, updateWorkspaceUsers } from '../../../services/api';
+import { getRoles, updateOrganizationMember, updateWorkspaceMember } from '../../../services/api';
 import { useNavigate } from 'react-router-dom';
 
 const initialState = {
@@ -47,16 +47,32 @@ const EditUsers = ({ show, handleClose, GetUserList, user }) => {
         setLoading(true);
 
         try {
+            // Find the role ID from the selected role name
+            const selectedRole = roleList.find(r => r.role_name === formData.role);
+            if (!selectedRole) {
+                toast.error("Please select a valid role");
+                setLoading(false);
+                return;
+            }
+
+            // Get the user ID from the user prop
+            const userId = user?.id || user?.user_id;
+            if (!userId) {
+                toast.error("User ID not found");
+                setLoading(false);
+                return;
+            }
+
+            // Payload should only contain roleId per API schema
             const payload = {
-                ...formData,
-                ...(UserOrgId ? { org_id: UserOrgId } : { workspace_id: workspaceId }),
+                roleId: selectedRole.id || selectedRole.role_id
             };
 
             const res = UserOrgId
-                ? await updateOrganizationUsers(payload)
-                : await updateWorkspaceUsers(payload);
+                ? await updateOrganizationMember(UserOrgId, userId, payload)
+                : await updateWorkspaceMember(workspaceId, userId, payload);
 
-            if (res?.data?.statusCode === 200 || res?.data) {
+            if (res?.data?.statusCode === 200 || res?.data?.success) {
                 toast.success(res?.data?.message || "User updated successfully");
                 setFormData(initialState);
                 handleClose();

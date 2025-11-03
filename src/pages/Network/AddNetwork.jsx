@@ -91,10 +91,20 @@ const AddNetwork = () => {
     }
 
     try {
-      const payload = { workspace_id: workspaceId, ...formData };
-      const res = await createNetwork(payload);
+      // Transform field names to camelCase per API schema
+      const payload = {
+        vpcName: vpc_name,
+        vpcId: vpc_id,
+        region: formData.region || "",
+        subnetIds: subnet_ids,
+        securityGroupIds: security_group_ids,
+        endpoint: endpoint
+      };
 
-      if (res?.data?.statusCode === 200 || res?.data) {
+      // workspace_id is now a path parameter, not in the body
+      const res = await createNetwork(workspaceId, payload);
+
+      if (res?.data?.statusCode === 200 || res?.data?.statusCode === 201 || res?.data?.success) {
         toast.success(res?.data?.message || "Network created successfully!");
         navigate("/dashboard/network");
       }

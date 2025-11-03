@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { listWorkspaces, deleteWorkspace } from "../../services/api";
 import plusicon from "../../assets/images/plus.png";
 import filter from "../../assets/images/filter.png";
 import upicon from "../../assets/images/upIcon.png";
@@ -17,34 +19,41 @@ import workspaceArrow from "../../assets/images/workspace_arrow.png";
 const Workspace = () => {
   const navigate = useNavigate();
 
-  // Static workspace data
-  const [workspaceData, setWorkspaceData] = useState([
-    {
-      id: "1",
-      name: "Workspace 23",
-      region: "US-East",
-      status: "Running",
-      createdAt: "2024-01-15",
-    },
-    {
-      id: "2",
-      name: "Workspace 456",
-      region: "US-West",
-      status: "Running",
-      createdAt: "2024-02-20",
-    },
-    {
-      id: "3",
-      name: "Analytics Hub",
-      region: "EU-Central",
-      status: "Creating",
-      createdAt: "2024-03-10",
-    },
-  ]);
+  const [workspaceData, setWorkspaceData] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selectedRows, setSelectedRows] = useState([]); // store workspace ids
   const [sortOrder, setSortOrder] = useState("asc");
   const [isChecked, setIsChecked] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Fetch workspaces on component mount
+  useEffect(() => {
+    fetchWorkspaces();
+  }, []);
+
+  const fetchWorkspaces = async () => {
+    setLoading(true);
+    try {
+      const response = await listWorkspaces();
+
+      if (response?.data && Array.isArray(response.data)) {
+        // Transform API response to match component format
+        const transformedData = response.data.map(workspace => ({
+          id: workspace.workspaceId,
+          name: workspace.name,
+          region: workspace.awsRegion,
+          status: workspace.status,
+          createdAt: workspace.createdAt ? new Date(workspace.createdAt).toISOString().split('T')[0] : "",
+        }));
+        setWorkspaceData(transformedData);
+      }
+    } catch (error) {
+      console.error("Error fetching workspaces:", error);
+      // Error handling is done by Axios interceptor
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Filtered data derived from search query (case-insensitive)
   const filteredData = workspaceData.filter((w) =>
@@ -95,11 +104,26 @@ const Workspace = () => {
     // navigate("/edit-workspace", { state: { workspace } });
   };
 
-  const handleDelete = (workspaceId) => {
-    console.log("Deleting workspace:", workspaceId);
-    setWorkspaceData(
-      workspaceData.filter((workspace) => workspace.id !== workspaceId)
-    );
+  const handleDelete = async (workspaceId) => {
+    if (!window.confirm("Are you sure you want to delete this workspace?")) {
+      return;
+    }
+
+    try {
+      await deleteWorkspace(workspaceId);
+      toast.success("Workspace deleted successfully");
+
+      // Remove from local state
+      setWorkspaceData(
+        workspaceData.filter((workspace) => workspace.id !== workspaceId)
+      );
+
+      // Also remove from selected rows if it was selected
+      setSelectedRows(selectedRows.filter(id => id !== workspaceId));
+    } catch (error) {
+      console.error("Error deleting workspace:", error);
+      // Error handling is done by Axios interceptor
+    }
   };
 
   return (
@@ -150,7 +174,14 @@ const Workspace = () => {
               </div>
 
               <div className="second table-responsive">
-                {filteredData.length === 0 ? (
+                {loading ? (
+                  <div className="data-not-found my-5">
+                    <div className="spinner-border text-primary" role="status">
+                      <span className="visually-hidden">Loading...</span>
+                    </div>
+                    <div className="mt-2">Loading workspaces...</div>
+                  </div>
+                ) : filteredData.length === 0 ? (
                   <div className="data-not-found my-5">No Workspaces Found</div>
                 ) : (
                   <>

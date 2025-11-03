@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import AuthLeft from "./AuthLeft";
-import { verifySignInOTP, resendOTP } from "../../services/api";
+import { verifySignInOTP, resendOTP, getProfile, listOrganizations } from "../../services/api";
 import { setAuth } from "../../services/auth";
 import "./SignIn.css";
 
@@ -30,6 +30,59 @@ const OTPVerify = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  /**
+   * Check if user has profile and organization, then navigate accordingly
+   * - No profile? → /create-profile
+   * - Has profile but no org? → /create-organization
+   * - Has both? → /dashboard/home
+   */
+  const checkUserStatusAndNavigate = async () => {
+    try {
+      console.log("Checking user profile and organization status...");
+
+      // Check both profile and organizations in parallel
+      const [profileRes, orgsRes] = await Promise.all([
+        getProfile().catch(() => null), // Return null if API fails
+        listOrganizations().catch(() => null), // Return null if API fails
+      ]);
+
+      console.log("Profile response:", profileRes);
+      console.log("Organizations response:", orgsRes);
+
+      // Check if user has a profile
+      const hasProfile = profileRes?.data?.data != null || profileRes?.data?.success === true;
+
+      // Check if user belongs to any organizations
+      const hasOrganization =
+        (orgsRes?.data?.organizations && orgsRes.data.organizations.length > 0) ||
+        (orgsRes?.data?.total && orgsRes.data.total > 0);
+
+      console.log("Has profile:", hasProfile);
+      console.log("Has organization:", hasOrganization);
+
+      // Navigate based on what exists
+      if (!hasProfile) {
+        console.log("No profile found, navigating to /create-profile");
+        navigate("/create-profile");
+      } else if (!hasOrganization) {
+        console.log("Profile exists but no organization, navigating to /create-organization");
+        navigate("/create-organization");
+      } else {
+        console.log("Profile and organization exist, navigating to /dashboard/home");
+        // Store organization ID if available
+        if (orgsRes?.data?.organizations?.[0]?.id) {
+          localStorage.setItem("user_org_id", orgsRes.data.organizations[0].id);
+        }
+        navigate("/dashboard/home");
+      }
+    } catch (error) {
+      // If checking fails, default to onboarding flow for safety
+      console.error("Error checking user status:", error);
+      console.log("Defaulting to /create-profile due to error");
+      navigate("/create-profile");
+    }
+  };
+
   const handleOtpVerify = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -52,11 +105,8 @@ const OTPVerify = () => {
         localStorage.setItem("user_id", userId);
         toast.success("OTP verified successfully!");
 
-        // Use setTimeout to ensure state updates complete before navigation
-        setTimeout(() => {
-          console.log("Navigating to /create-profile");
-          navigate("/create-profile");
-        }, 100);
+        // Check if user has profile and organization to determine next step
+        await checkUserStatusAndNavigate();
       } else {
         console.error("JWT token not found in response:", response);
         toast.error("Invalid response from server. Please try again.");

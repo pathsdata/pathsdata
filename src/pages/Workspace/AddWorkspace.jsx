@@ -2,19 +2,19 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { createWorkspace } from "../../services/api";
 import "./WorkspaceCreate.css";
 
-import first from "../../assets/images/workspace/1.svg";
-import second from "../../assets/images/workspace/2.svg";
 import third from "../../assets/images/workspace/3.svg";
 import fourth from "../../assets/images/workspace/4.svg";
 import left_arrow from "../../assets/images/nvigation_arrows/left_arrow.png";
 
 const AddWorkspace = () => {
   const navigate = useNavigate();
-  const OrgFamily = JSON.parse(localStorage.getItem("openOrgFamily"));
 
-  const [selectedOption, setSelectedOption] = useState("existing");
+  const [loader, setLoader] = useState(false);
+  const [selectedOption, setSelectedOption] = useState("quick-start");
 
   const [formData, setFormData] = useState({
     org_id: "",
@@ -32,6 +32,47 @@ const AddWorkspace = () => {
 
   const handleOptionSelect = (option) => {
     setSelectedOption(option);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Validation
+    if (!formData.family_name.trim()) {
+      toast.error("Please enter a workspace name");
+      return;
+    }
+
+    if (!formData.region) {
+      toast.error("Please select a region");
+      return;
+    }
+
+    setLoader(true);
+
+    try {
+      // Transform form data to match API schema
+      const payload = {
+        name: formData.family_name,
+        awsRegion: formData.region,
+        // deploymentType could be added to settings if needed
+        settings: {
+          deploymentType: selectedOption // quick-start or pathsdata
+        }
+      };
+
+      const response = await createWorkspace(payload);
+
+      if (response?.data?.workspaceId || response?.status === 201) {
+        toast.success("Workspace created successfully!");
+        navigate("/dashboard/workspace");
+      }
+    } catch (error) {
+      console.error("Error creating workspace:", error);
+      // Error handling is done by Axios interceptor
+    } finally {
+      setLoader(false);
+    }
   };
 
   return (
@@ -188,9 +229,10 @@ const AddWorkspace = () => {
           </button>
 
           <button
-            type="submit"
+            type="button"
             className={`btn-create ${loader ? "loading" : ""}`}
             disabled={loader}
+            onClick={handleSubmit}
           >
             {loader ? (
               <span className="spinner" role="status" aria-hidden="true"></span>

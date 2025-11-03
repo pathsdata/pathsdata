@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import profileUser from "../../../assets/images/profile.png";
 import profileselect from "../../../assets/images/profile-select.png";
-import { createProfile } from "../../../services/api";
+import { createProfile, listOrganizations } from "../../../services/api";
 import { countries, languages } from "../../../constants/countries";
 import "../SignIn.css";
 
@@ -68,9 +68,32 @@ const CreateProfile = () => {
 
       if (res?.data?.success || res?.data?.statusCode === 200) {
         toast.success(res?.data?.message || "Profile created successfully");
-        // Note: JWT token was already set during sign-in/verify-otp flow
-        // Profile creation is an authenticated endpoint that updates user profile
-        navigate("/create-organization");
+
+        // Check if user already belongs to any organizations
+        try {
+          console.log("Checking if user belongs to any organizations...");
+          const orgsRes = await listOrganizations();
+
+          const hasOrganization =
+            (orgsRes?.data?.organizations && orgsRes.data.organizations.length > 0) ||
+            (orgsRes?.data?.total && orgsRes.data.total > 0);
+
+          if (hasOrganization) {
+            console.log("User already belongs to organization(s), navigating to dashboard");
+            // Store organization ID if available
+            if (orgsRes?.data?.organizations?.[0]?.id) {
+              localStorage.setItem("user_org_id", orgsRes.data.organizations[0].id);
+            }
+            navigate("/dashboard/home");
+          } else {
+            console.log("No organizations found, navigating to create-organization");
+            navigate("/create-organization");
+          }
+        } catch (orgError) {
+          // If checking organizations fails, default to create-organization
+          console.error("Error checking organizations:", orgError);
+          navigate("/create-organization");
+        }
       }
     } catch (error) {
       console.error("Error creating profile:", error);

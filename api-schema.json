@@ -132,6 +132,130 @@
         }
       }
     },
+    "/api/v1/profile": {
+      "get": {
+        "tags": [
+          "profile"
+        ],
+        "summary": "Get Profile",
+        "description": "Get authenticated user's profile.\n\nRetrieves the profile information for the currently authenticated user.\n\n**Authentication Required:** Yes\n\n**Returns:**\n- 200 OK: Profile data retrieved successfully\n- 401 Unauthorized: Invalid or missing authentication\n- 404 Not Found: User profile not found\n\n**Example Response:**\n```json\n{\n    \"success\": true,\n    \"message\": \"Profile retrieved successfully\",\n    \"data\": {\n        \"userId\": \"123e4567-e89b-12d3-a456-426614174000\",\n        \"email\": \"user@example.com\",\n        \"fullName\": \"John Doe\",\n        \"company\": \"Acme Corp\",\n        \"phoneNumber\": \"+1234567890\",\n        \"language\": \"en\",\n        \"country\": \"United States\",\n        \"profileImageUrl\": \"https://s3.amazonaws.com/bucket/profile/user@example.com.jpeg\"\n    }\n}\n```",
+        "operationId": "get_profile_api_v1_profile_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetProfileResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "profile"
+        ],
+        "summary": "Update Profile",
+        "description": "Update authenticated user's profile.\n\nUpdates the profile information for the currently authenticated user.\nAll fields are optional - only provided fields will be updated.\n\n**Authentication Required:** Yes\n\n**Request Body:**\n```json\n{\n    \"name\": \"John Doe\",\n    \"company\": \"Acme Corp\",\n    \"phone_number\": \"+1234567890\",\n    \"language\": \"English\",\n    \"country\": \"United States\",\n    \"image_base64_value\": \"base64_encoded_image_data\"\n}\n```\n\n**Returns:**\n- 200 OK: Profile updated successfully\n- 400 Bad Request: Invalid profile data\n- 401 Unauthorized: Invalid or missing authentication\n- 404 Not Found: User profile not found\n\n**Example Response:**\n```json\n{\n    \"success\": true,\n    \"message\": \"Profile updated successfully\"\n}\n```",
+        "operationId": "update_profile_api_v1_profile_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateProfileResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/subscriptions": {
+      "get": {
+        "tags": [
+          "subscriptions"
+        ],
+        "summary": "Get Subscription",
+        "description": "Get user's subscription.\n\nRetrieves the subscription information for the currently authenticated user.\n\n**Authentication Required:** Yes\n\n**Returns:**\n- 200 OK: Subscription data retrieved successfully\n- 401 Unauthorized: Invalid or missing authentication\n- 404 Not Found: No subscription found (returns free tier)\n\n**Example Response:**\n```json\n{\n    \"success\": true,\n    \"message\": \"Subscription retrieved successfully\",\n    \"data\": {\n        \"subscriptionId\": \"123e4567-e89b-12d3-a456-426614174000\",\n        \"subscriptionType\": \"professional\",\n        \"status\": \"active\",\n        \"startDate\": \"2025-01-01T00:00:00Z\",\n        \"endDate\": \"2025-12-31T23:59:59Z\",\n        \"autoRenew\": true,\n        \"billingCycle\": \"yearly\",\n        \"seats\": 5,\n        \"billingAmount\": 99.99,\n        \"billingCurrency\": \"USD\"\n    }\n}\n```",
+        "operationId": "get_subscription_api_v1_subscriptions_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetSubscriptionResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "subscriptions"
+        ],
+        "summary": "Cancel Subscription",
+        "description": "Cancel user's subscription.\n\nCancels the currently authenticated user's subscription.\nThis will process cancellation with the payment provider and update the subscription status.\n\n**Authentication Required:** Yes\n\n**Returns:**\n- 200 OK: Subscription cancelled successfully\n- 401 Unauthorized: Invalid or missing authentication\n- 404 Not Found: No active subscription to cancel\n- 400 Bad Request: Subscription already cancelled\n\n**Example Response:**\n```json\n{\n    \"success\": true,\n    \"message\": \"Subscription cancelled successfully\",\n    \"transactionId\": \"txn_cancel_mock_abc123\",\n    \"refundAmount\": 0.0\n}\n```",
+        "operationId": "cancel_subscription_api_v1_subscriptions_delete",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CancelSubscriptionResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/organizations": {
       "get": {
         "tags": [
@@ -451,6 +575,364 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RemoveOrganizationMemberResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "organizations"
+        ],
+        "summary": "Update Organization Member Role",
+        "description": "Update an organization member's role.\n\nUpdates the role for a specified member of the organization.\nOnly organization owners and admins can perform this action.\n\n**Authentication Required:** Yes\n**Authorization:** Requires `org:manage_members` permission or must be the owner\n\n**Request Body:**\n```json\n{\n    \"roleId\": \"123e4567-e89b-12d3-a456-426614174000\"\n}\n```\n\n**Returns:**\n- 200 OK: Member role updated successfully\n- 400 Bad Request: Invalid role ID\n- 401 Unauthorized: Invalid or missing authentication\n- 403 Forbidden: Insufficient permissions\n- 404 Not Found: Organization or member not found",
+        "operationId": "update_organization_member_role_api_v1_organizations__organization_id__members__member_user_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "organization_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Organization Id"
+            }
+          },
+          {
+            "name": "member_user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Member User Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMemberRoleRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateMemberRoleResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces": {
+      "get": {
+        "tags": [
+          "workspaces"
+        ],
+        "summary": "List Workspaces",
+        "description": "List all workspaces owned by the user.\n\nRetrieves a list of all workspaces where the authenticated user is the owner.\n\n**Authentication Required:** Yes\n\n**Returns:**\n- 200 OK: List of workspaces\n- 401 Unauthorized: Invalid or missing authentication",
+        "operationId": "list_workspaces_api_v1_workspaces_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/WorkspaceResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Workspaces Api V1 Workspaces Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "workspaces"
+        ],
+        "summary": "Create Workspace",
+        "description": "Create a new workspace.\n\nCreates a new workspace for the authenticated user and sets them as the owner.\n\n**Authentication Required:** Yes\n\n**Request Body:**\n```json\n{\n    \"name\": \"Production Analytics\",\n    \"awsRegion\": \"us-east-1\",\n    \"settings\": {\n        \"dataRetentionDays\": 90,\n        \"enableAuditLogs\": true\n    }\n}\n```\n\n**Returns:**\n- 201 Created: Workspace created successfully\n- 400 Bad Request: Invalid input data\n- 401 Unauthorized: Invalid or missing authentication",
+        "operationId": "create_workspace_api_v1_workspaces_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkspaceSetupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/workspaces/{workspace_id}": {
+      "get": {
+        "tags": [
+          "workspaces"
+        ],
+        "summary": "Get Workspace",
+        "description": "Get workspace by ID.\n\nRetrieves detailed information about a specific workspace.\nUser must be the owner or a member of the workspace.\n\n**Authentication Required:** Yes\n\n**Returns:**\n- 200 OK: Workspace details\n- 401 Unauthorized: Invalid or missing authentication\n- 403 Forbidden: User does not have access to this workspace\n- 404 Not Found: Workspace not found",
+        "operationId": "get_workspace_api_v1_workspaces__workspace_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "workspaces"
+        ],
+        "summary": "Update Workspace",
+        "description": "Update workspace.\n\nUpdates workspace name and/or settings.\nOnly the workspace owner can update the workspace.\n\n**Authentication Required:** Yes\n\n**Request Body:**\n```json\n{\n    \"name\": \"Updated Workspace Name\",\n    \"settings\": {\n        \"dataRetentionDays\": 120,\n        \"enableAuditLogs\": false\n    }\n}\n```\n\n**Returns:**\n- 200 OK: Workspace updated successfully\n- 400 Bad Request: Invalid input data\n- 401 Unauthorized: Invalid or missing authentication\n- 403 Forbidden: User is not the workspace owner\n- 404 Not Found: Workspace not found",
+        "operationId": "update_workspace_api_v1_workspaces__workspace_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkspaceUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "workspaces"
+        ],
+        "summary": "Delete Workspace",
+        "description": "Delete workspace.\n\nSoft deletes a workspace by marking it as deleted.\nOnly the workspace owner can delete the workspace.\n\n**Authentication Required:** Yes\n\n**Returns:**\n- 204 No Content: Workspace deleted successfully\n- 401 Unauthorized: Invalid or missing authentication\n- 403 Forbidden: User is not the workspace owner\n- 404 Not Found: Workspace not found",
+        "operationId": "delete_workspace_api_v1_workspaces__workspace_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces/{workspace_id}/members/{member_user_id}": {
+      "patch": {
+        "tags": [
+          "workspaces"
+        ],
+        "summary": "Update Workspace Member Role",
+        "description": "Update a workspace member's role.\n\nUpdates the role for a specified member of the workspace.\nOnly workspace owners and admins can perform this action.\n\n**Authentication Required:** Yes\n**Authorization:** Requires `workspace:manage_members` permission or must be the owner\n\n**Request Body:**\n```json\n{\n    \"roleId\": \"123e4567-e89b-12d3-a456-426614174000\"\n}\n```\n\n**Returns:**\n- 200 OK: Member role updated successfully\n- 400 Bad Request: Invalid role ID\n- 401 Unauthorized: Invalid or missing authentication\n- 403 Forbidden: Insufficient permissions\n- 404 Not Found: Workspace or member not found",
+        "operationId": "update_workspace_member_role_api_v1_workspaces__workspace_id__members__member_user_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          },
+          {
+            "name": "member_user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Member User Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMemberRoleRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateMemberRoleResponse"
                 }
               }
             }
@@ -880,6 +1362,266 @@
         }
       }
     },
+    "/api/v1/workspaces/{workspace_id}/networks": {
+      "post": {
+        "tags": [
+          "networks"
+        ],
+        "summary": "Create Vpc Configuration",
+        "description": "Create a new VPC configuration for a workspace.\n\n**Authentication Required:** Yes\n\n**Permissions:** Workspace owner or admin\n\n**Request Body:**\n```json\n{\n    \"vpcName\": \"production-vpc\",\n    \"vpcId\": \"vpc-0abc123def456789\",\n    \"region\": \"us-east-1\",\n    \"subnetIds\": [\"subnet-0abc123\", \"subnet-0def456\"],\n    \"securityGroupIds\": [\"sg-0abc123\"],\n    \"endpoint\": \"https://vpc-endpoint.example.com\"\n}\n```\n\n**Returns:**\n- 201 Created: VPC configuration created successfully\n- 400 Bad Request: Invalid VPC configuration data\n- 401 Unauthorized: Invalid or missing authentication\n- 404 Not Found: Workspace not found\n- 409 Conflict: VPC configuration with same name already exists",
+        "operationId": "create_vpc_configuration_api_v1_workspaces__workspace_id__networks_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVpcConfigurationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateVpcConfigurationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "networks"
+        ],
+        "summary": "List Vpc Configurations",
+        "description": "Get all VPC configurations for a workspace.",
+        "operationId": "list_vpc_configurations_api_v1_workspaces__workspace_id__networks_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          },
+          {
+            "name": "region",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by AWS region",
+              "title": "Region"
+            },
+            "description": "Filter by AWS region"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListVpcConfigurationsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces/{workspace_id}/networks/{vpc_id}": {
+      "delete": {
+        "tags": [
+          "networks"
+        ],
+        "summary": "Delete Vpc Configuration",
+        "description": "Delete a VPC configuration.",
+        "operationId": "delete_vpc_configuration_api_v1_workspaces__workspace_id__networks__vpc_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          },
+          {
+            "name": "vpc_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Vpc Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteVpcConfigurationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/roles": {
+      "get": {
+        "tags": [
+          "roles"
+        ],
+        "summary": "List Roles",
+        "description": "List roles based on context.\n\nReturns roles based on the provided filters:\n- If workspace_id provided: returns workspace roles for that workspace's organization\n- If org_id provided: returns organization and workspace roles for that org\n- If neither provided: returns system-level roles\n\n**Authentication Required:** Yes\n\n**Query Parameters:**\n- org_id (optional): Filter roles by organization ID\n- workspace_id (optional): Filter roles by workspace ID\n\n**Returns:**\n- 200 OK: Roles retrieved successfully\n- 401 Unauthorized: Invalid or missing authentication\n- 500 Internal Server Error: Server error\n\n**Example Response:**\n```json\n{\n    \"success\": true,\n    \"message\": \"Found 5 role(s) for organization abc-123\",\n    \"data\": [\n        {\n            \"id\": \"123e4567-e89b-12d3-a456-426614174000\",\n            \"name\": \"Admin\",\n            \"type\": \"predefined\",\n            \"scope\": \"organization\",\n            \"description\": \"Administrator with full access\",\n            \"permissions\": [\n                {\n                    \"effect\": \"allow\",\n                    \"actions\": [\"*\"],\n                    \"resources\": [\"*\"]\n                }\n            ]\n        }\n    ]\n}\n```",
+        "operationId": "list_roles_api_v1_roles_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Organization ID filter",
+              "title": "Org Id"
+            },
+            "description": "Organization ID filter"
+          },
+          {
+            "name": "workspace_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Workspace ID filter",
+              "title": "Workspace Id"
+            },
+            "description": "Workspace ID filter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListRolesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/": {
       "get": {
         "summary": "Root",
@@ -1152,6 +1894,51 @@
         "title": "AddOrganizationMemberResponse",
         "description": "Response after adding member."
       },
+      "CancelSubscriptionResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the request was successful"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Response message"
+          },
+          "transactionId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transactionid",
+            "description": "Cancellation transaction ID"
+          },
+          "refundAmount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refundamount",
+            "description": "Refund amount (if applicable)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message"
+        ],
+        "title": "CancelSubscriptionResponse",
+        "description": "Response for DELETE /api/v1/subscriptions endpoint."
+      },
       "CreateOrganizationRequest": {
         "properties": {
           "name": {
@@ -1245,6 +2032,118 @@
         "title": "CreateOrganizationResponse",
         "description": "Response after creating organization."
       },
+      "CreateVpcConfigurationRequest": {
+        "properties": {
+          "vpcName": {
+            "type": "string",
+            "title": "Vpcname",
+            "description": "VPC configuration name"
+          },
+          "vpcId": {
+            "type": "string",
+            "title": "Vpcid",
+            "description": "AWS VPC ID (e.g., vpc-xxxxx)"
+          },
+          "region": {
+            "type": "string",
+            "title": "Region",
+            "description": "AWS region (e.g., us-east-1)"
+          },
+          "subnetIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Subnetids",
+            "description": "AWS subnet IDs (e.g., [subnet-xxxxx])"
+          },
+          "securityGroupIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Securitygroupids",
+            "description": "AWS security group IDs (e.g., [sg-xxxxx])"
+          },
+          "endpoint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Endpoint",
+            "description": "Optional VPC endpoint URL"
+          }
+        },
+        "type": "object",
+        "required": [
+          "vpcName",
+          "vpcId",
+          "region",
+          "subnetIds",
+          "securityGroupIds"
+        ],
+        "title": "CreateVpcConfigurationRequest",
+        "description": "Request for POST /api/v1/workspaces/{workspace_id}/networks endpoint."
+      },
+      "CreateVpcConfigurationResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the request was successful"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Response message"
+          },
+          "vpcConfigurationId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vpcconfigurationid",
+            "description": "Created VPC configuration ID"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message"
+        ],
+        "title": "CreateVpcConfigurationResponse",
+        "description": "Response for POST /api/v1/workspaces/{workspace_id}/networks endpoint."
+      },
+      "DeleteVpcConfigurationResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the request was successful"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Response message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message"
+        ],
+        "title": "DeleteVpcConfigurationResponse",
+        "description": "Response for DELETE /api/v1/workspaces/{workspace_id}/networks/{vpc_id} endpoint."
+      },
       "EntityType": {
         "type": "string",
         "enum": [
@@ -1295,6 +2194,70 @@
           "error": "ValidationError",
           "message": "Invalid input data"
         }
+      },
+      "GetProfileResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the request was successful"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Response message"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProfileData"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "User profile data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message"
+        ],
+        "title": "GetProfileResponse",
+        "description": "Response for GET /profile endpoint."
+      },
+      "GetSubscriptionResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the request was successful"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Response message"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SubscriptionData"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Subscription data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message"
+        ],
+        "title": "GetSubscriptionResponse",
+        "description": "Response for GET /api/v1/subscriptions endpoint."
       },
       "HTTPValidationError": {
         "properties": {
@@ -1419,6 +2382,64 @@
         ],
         "title": "InvitationResponse",
         "description": "Invitation details response."
+      },
+      "ListRolesResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the request was successful"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Response message"
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/RoleData"
+            },
+            "type": "array",
+            "title": "Data",
+            "description": "List of roles"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message"
+        ],
+        "title": "ListRolesResponse",
+        "description": "Response for GET /api/v1/roles endpoint."
+      },
+      "ListVpcConfigurationsResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the request was successful"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Response message"
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/VpcConfigurationData"
+            },
+            "type": "array",
+            "title": "Data",
+            "description": "List of VPC configurations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message"
+        ],
+        "title": "ListVpcConfigurationsResponse",
+        "description": "Response for GET /api/v1/workspaces/{workspace_id}/networks endpoint."
       },
       "MarketplaceRegistrationRequest": {
         "properties": {
@@ -1565,6 +2586,127 @@
         ],
         "title": "OrganizationResponse",
         "description": "Organization details response."
+      },
+      "PermissionData": {
+        "properties": {
+          "effect": {
+            "type": "string",
+            "title": "Effect",
+            "description": "Permission effect (allow/deny)"
+          },
+          "actions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Actions",
+            "description": "Allowed actions"
+          },
+          "resources": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Resources",
+            "description": "Resource patterns"
+          }
+        },
+        "type": "object",
+        "required": [
+          "effect",
+          "actions",
+          "resources"
+        ],
+        "title": "PermissionData",
+        "description": "Permission data."
+      },
+      "ProfileData": {
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Userid",
+            "description": "User ID"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email",
+            "description": "User email address"
+          },
+          "fullName": {
+            "type": "string",
+            "title": "Fullname",
+            "description": "User's full name"
+          },
+          "company": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company",
+            "description": "Company name"
+          },
+          "phoneNumber": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phonenumber",
+            "description": "Phone number"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language",
+            "description": "Preferred language"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country",
+            "description": "User's country"
+          },
+          "profileImageUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profileimageurl",
+            "description": "Profile image URL"
+          }
+        },
+        "type": "object",
+        "required": [
+          "userId",
+          "email",
+          "fullName"
+        ],
+        "title": "ProfileData",
+        "description": "User profile data."
       },
       "RegistrationCompleteResponse": {
         "properties": {
@@ -1765,6 +2907,60 @@
         "title": "RevokeInvitationResponse",
         "description": "Response after revoking invitation."
       },
+      "RoleData": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "Role ID"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Role name"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "description": "Role type (predefined/custom)"
+          },
+          "scope": {
+            "type": "string",
+            "title": "Scope",
+            "description": "Role scope (system/organization/workspace)"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Role description"
+          },
+          "permissions": {
+            "items": {
+              "$ref": "#/components/schemas/PermissionData"
+            },
+            "type": "array",
+            "title": "Permissions",
+            "description": "Role permissions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "type",
+          "scope"
+        ],
+        "title": "RoleData",
+        "description": "Role data."
+      },
       "SendInvitationRequest": {
         "properties": {
           "email": {
@@ -1861,6 +3057,163 @@
         "title": "SendInvitationResponse",
         "description": "Response after sending invitation."
       },
+      "SubscriptionData": {
+        "properties": {
+          "subscriptionId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subscriptionid",
+            "description": "Subscription ID"
+          },
+          "subscriptionType": {
+            "type": "string",
+            "title": "Subscriptiontype",
+            "description": "Subscription type"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Subscription status"
+          },
+          "startDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Startdate",
+            "description": "Subscription start date"
+          },
+          "endDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enddate",
+            "description": "Subscription end date"
+          },
+          "autoRenew": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Autorenew",
+            "description": "Auto-renewal status"
+          },
+          "billingCycle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Billingcycle",
+            "description": "Billing cycle"
+          },
+          "seats": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seats",
+            "description": "Number of seats"
+          },
+          "billingAmount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Billingamount",
+            "description": "Billing amount"
+          },
+          "billingCurrency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Billingcurrency",
+            "description": "Billing currency"
+          }
+        },
+        "type": "object",
+        "required": [
+          "subscriptionType",
+          "status"
+        ],
+        "title": "SubscriptionData",
+        "description": "Subscription data."
+      },
+      "UpdateMemberRoleRequest": {
+        "properties": {
+          "roleId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Roleid",
+            "description": "New role ID to assign"
+          }
+        },
+        "type": "object",
+        "required": [
+          "roleId"
+        ],
+        "title": "UpdateMemberRoleRequest",
+        "description": "Request for PATCH /api/v1/organizations/{org_id}/members/{user_id} or\nPATCH /api/v1/workspaces/{workspace_id}/members/{user_id} endpoint."
+      },
+      "UpdateMemberRoleResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the request was successful"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Response message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message"
+        ],
+        "title": "UpdateMemberRoleResponse",
+        "description": "Response for member role update endpoints."
+      },
       "UpdateOrganizationRequest": {
         "properties": {
           "name": {
@@ -1946,6 +3299,106 @@
         ],
         "title": "UpdateOrganizationResponse",
         "description": "Response after updating organization."
+      },
+      "UpdateProfileRequest": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "User's full name"
+          },
+          "company": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company",
+            "description": "Company name"
+          },
+          "phone_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone Number",
+            "description": "Phone number"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language",
+            "description": "Preferred language"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country",
+            "description": "User's country"
+          },
+          "image_base64_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Base64 Value",
+            "description": "Base64 encoded profile image"
+          }
+        },
+        "type": "object",
+        "title": "UpdateProfileRequest",
+        "description": "Request for POST /profile endpoint."
+      },
+      "UpdateProfileResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the request was successful"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Response message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message"
+        ],
+        "title": "UpdateProfileResponse",
+        "description": "Response for POST /profile endpoint."
       },
       "ValidationError": {
         "properties": {
@@ -2061,6 +3514,250 @@
         ],
         "title": "VerifyOTPResponse",
         "description": "Response after verifying OTP."
+      },
+      "VpcConfigurationData": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "VPC configuration ID"
+          },
+          "vpcName": {
+            "type": "string",
+            "title": "Vpcname",
+            "description": "VPC configuration name"
+          },
+          "vpcId": {
+            "type": "string",
+            "title": "Vpcid",
+            "description": "AWS VPC ID"
+          },
+          "region": {
+            "type": "string",
+            "title": "Region",
+            "description": "AWS region"
+          },
+          "subnetIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Subnetids",
+            "description": "AWS subnet IDs"
+          },
+          "securityGroupIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Securitygroupids",
+            "description": "AWS security group IDs"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Configuration status"
+          },
+          "endpoint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Endpoint",
+            "description": "VPC endpoint URL"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat",
+            "description": "Creation timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "vpcName",
+          "vpcId",
+          "region",
+          "subnetIds",
+          "securityGroupIds",
+          "status",
+          "createdAt"
+        ],
+        "title": "VpcConfigurationData",
+        "description": "VPC configuration data."
+      },
+      "WorkspaceResponse": {
+        "properties": {
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Workspaceid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "awsRegion": {
+            "type": "string",
+            "title": "Awsregion"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updatedat"
+          },
+          "settings": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Settings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "workspaceId",
+          "name",
+          "awsRegion",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "WorkspaceResponse",
+        "description": "Workspace details response."
+      },
+      "WorkspaceSettingsSchema": {
+        "properties": {
+          "dataRetentionDays": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataretentiondays",
+            "default": 90
+          },
+          "enableAuditLogs": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enableauditlogs",
+            "default": true
+          },
+          "notificationEmail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notificationemail"
+          }
+        },
+        "type": "object",
+        "title": "WorkspaceSettingsSchema",
+        "description": "Workspace settings."
+      },
+      "WorkspaceSetupRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 3,
+            "title": "Name"
+          },
+          "awsRegion": {
+            "type": "string",
+            "title": "Awsregion",
+            "description": "AWS region for workspace"
+          },
+          "settings": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WorkspaceSettingsSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "awsRegion"
+        ],
+        "title": "WorkspaceSetupRequest",
+        "description": "Request to setup workspace.",
+        "example": {
+          "awsRegion": "us-east-1",
+          "name": "Production Analytics",
+          "settings": {
+            "dataRetentionDays": 90,
+            "enableAuditLogs": true,
+            "notificationEmail": "user@example.com"
+          }
+        }
+      },
+      "WorkspaceUpdateRequest": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 3
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "settings": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WorkspaceSettingsSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "WorkspaceUpdateRequest",
+        "description": "Request to update workspace."
       }
     },
     "securitySchemes": {
